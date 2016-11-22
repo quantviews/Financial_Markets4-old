@@ -81,17 +81,17 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="-" class="slide section level2">
 <h1>Финансовые данные</h1>
 <ul>
-<li>Важность количественных методов в бизнесе и финансах увеличивается по мере того, как появляется большее количество информации и данных</li>
+<li>Важность количественных методов в бизнесе и финансах увеличивается по мере того, как появляется большее количество информации и данных.</li>
 <li>Финансовые данные систематически собираются в больших количествах и все с большей временной точностью. Достаточно большое количество финансовых данных доступно абсолютно бесплатно.<br />
 </li>
-<li>По сравнению с другими областями, финансовых данных как правило достаточно много. Вопрос обычно состоит не в том, что данных нет, а в том, чтобы эффективно использовать доступные данные и получить содержательные результаты</li>
-<li>В R есть множество пакетов, которые позволяют загружать финансовые данные напрямую. Вам не надо заходить куда-то в интернете, скачивать/экспортировать данные, сохранять их на свой компьютер, загружать и проч. Обычно загрузка серии - это одна строка кода.</li>
+<li>Финансовых данных как правило достаточно <strong>много</strong> по сравнению с другими областями. Вопрос обычно состоит не в том, что данных нет, а в том, чтобы эффективно использовать доступные данные и получить содержательные результаты.</li>
+<li>В R есть множество пакетов, которые позволяют загружать финансовые данные напрямую. Вам не надо заходить куда-то в интернете, скачивать/экспортировать данные, сохранять их на свой компьютер, разбираться форматом хранения, загружать и проч. Обычно загрузка серии – это одна строка кода.</li>
 <li>Основой пакет, который мы будем использовать для получения зарубежных финансовых данных – <code>quantmod</code>, для российских данных – <code>rusquant</code>.</li>
 <li>Источники бесплатных данных по финансовым рынкам – Yahoo Finance, Google Finance, FRED, Oanda. Для России - Финам, Банк России, Московская Биржа.</li>
 </ul>
 </div>
-<div id="-----quntmod--rusquant" class="slide section level2">
-<h1>Получение финансовых данных с помощью quntmod и rusquant</h1>
+<div id="-----quantmod--rusquant" class="slide section level2">
+<h1>Получение финансовых данных с помощью quantmod и rusquant</h1>
 <pre><code>##       GSPC.Open GSPC.High GSPC.Low GSPC.Close GSPC.Volume GSPC.Adjusted
 ## 16826   2162.71   2165.92  2152.49    2164.45  4988050000       2164.45
 ## 16827   2165.64   2171.36  2156.08    2164.20  5367200000       2164.20
@@ -113,7 +113,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <span class="kw">library</span>(rusquant)
 micex &lt;-<span class="st"> </span>rusquant::<span class="kw">getSymbols.Finam</span>(<span class="st">&#39;MICEX&#39;</span>, <span class="dt">symbol.lookup =</span> <span class="ot">FALSE</span>) <span class="co"># индекс ММВБ </span></code></pre></div>
 <ul>
-<li>Обычно у каждой серии есть свой уникальный идентификатор (id) – тикер – это текстовый код - аббревиатура. Но в разных источниках могут использоваться разные тикеры для одной и той же серии. Поэтому проверяйте тикеры, чтобы удостовериться, что источники возвращает вам те данные, что вам нужны. К примеру, индекс S&amp;P 500 имеет тикер <code>SPX</code> в Bloomberg, <code>^GSPC</code> – в Yahoo Finance, <code>INDEXSP:.INX</code> – в Google Finance, <code>SP500</code> – во FRED.</li>
+<li>Обычно у каждой серии есть свой уникальный идентификатор (id) – <strong>тикер</strong> – это текстовый код - аббревиатура. Но в разных источниках могут использоваться разные тикеры для одной и той же серии. Поэтому проверяйте тикеры, чтобы удостовериться, что источники возвращает вам те данные, что вам нужны. К примеру, индекс S&amp;P 500 имеет тикер <code>SPX</code> в Bloomberg, <code>^GSPC</code> – в Yahoo Finance, <code>INDEXSP:.INX</code> – в Google Finance, <code>SP500</code> – во FRED.</li>
 </ul>
 </div>
 <div id="-sp-500----" class="slide section level2">
@@ -149,7 +149,7 @@ micex &lt;-<span class="st"> </span>rusquant::<span class="kw">getSymbols.Finam<
 <div id="-" class="slide section level2">
 <h1>Внутридневные данные</h1>
 <ul>
-<li>Для дневных серий обычно используют цены закрытия торгового дня (close price). Обратите внимание, что время закрытия для разных торговых площадок может отличаться. Пример – оценка корреляции между ценой на нефть WTI на NYMEX (время закрытия – 21-30 по МСК) и курсом RUB/USD (фиксинг - 12-00 МСК, время основной сессии на Московской Бирже – c 10-00 до 15-15 и так далее). Эти различия имеют значение на современных рынках.</li>
+<li>Для дневных серий обычно используют цены закрытия торгового дня (close price). Обратите внимание, что время закрытия для разных торговых площадок может отличаться. Пример – оценка корреляции между ценой на нефть WTI на NYMEX (время закрытия – 21-30 по МСК) и курсом RUB/USD (фиксинг - 12-00 МСК предыдущего дня, время основной сессии на Московской Бирже – c 10-00 до 15-15 и так далее). Эти различия имеют значение на современных рынках.</li>
 <li>Финансовые данные зачастую доступны с очень высоким разрешением – вплоть до мониторинга данных по каждым отдельным торговым операциям (tick data)</li>
 <li>Многие современные финансовые рынки функционируют в круглосуточном режиме. К примеру, валютные рынки устроены подобным образом.</li>
 <li>Скорость обработки информации за последние 10-15 лет выросла драматическим образом. Поэтому реакция рынки на те или иные события очень быстро. Использование дневных данных не позволяет оценивать эти эффекты.</li>
@@ -165,8 +165,8 @@ micex &lt;-<span class="st"> </span>rusquant::<span class="kw">getSymbols.Finam<
 <span class="kw">candleChart</span>(rub, <span class="dt">theme=</span><span class="st">&#39;white&#39;</span>, <span class="dt">name =</span> <span class="st">&#39;Динамика торгов долларом США на прошлой неделе&#39;</span>)</code></pre></div>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-6-1.png" width="1344" style="display: block; margin: auto;" /></p>
 </div>
-<div id="-sp500" class="slide section level2">
-<h1>Логарифм S&amp;P500</h1>
+<div id="--" class="slide section level2">
+<h1>Логарифмическое преобразование серии</h1>
 <p>Используйте лог-преобразование для того, чтобы скорректировать серию на экспоненциальный рост и “ограничить” волатильность</p>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-7-1.png" width="1344" style="display: block; margin: auto;" /></p>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-8-1.png" width="1344" style="display: block; margin: auto;" /></p>
@@ -202,6 +202,10 @@ F-statistic: 3.731e+05 on 1 and 16829 DF,  p-value: &lt; 2.2e-16</code></pre>
 <div id="--------" class="slide section level2">
 <h1>Может ли вчерашнее значение индекса предсказать нам значение сегодня?</h1>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-11-1.png" width="1344" style="display: block; margin: auto;" /></p>
+</div>
+<div id="---------2" class="slide section level2">
+<h1>Может ли вчерашнее значение индекса предсказать нам значение сегодня? (2)</h1>
+<p>Посчитаем регрессию</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">model.yest &lt;-<span class="st"> </span><span class="kw">lm</span>(<span class="dt">data =</span> data, sp500.log ~<span class="st"> </span>sp500.lag.log)
 <span class="kw">print</span>(<span class="kw">summary</span>(model.yest), <span class="dt">digits=</span><span class="dv">6</span>)</code></pre></div>
 <pre><code>
@@ -230,15 +234,15 @@ sp500.lag.log  9.998419e-01 1.000057404</code></pre>
 <p>Похоже, что не очень. Согласно посчитанной регрессии, “сегодня” будет таким же, как вчера (<span class="math inline">\(\beta = 1\)</span>).</p>
 <p>Наблюдение – для финансовых данных обычно наблюдения, которые находятся “рядом”&quot; другом с другом, <strong>скоррелированны между собой</strong>.</p>
 </div>
-<div id="---sp-500" class="slide section level2">
-<h1>Гистограмма лог значений S&amp;P 500</h1>
+<div id="----" class="slide section level2">
+<h1>Гистограмма лог-значений – проверка допущений</h1>
 <p>Гистограмма указывает на то, что моменты распределения не являются устойчивыми. Использование данных в такой форме (“в уровнях”) не очень осмысленно.</p>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-13-1.png" width="1344" style="display: block; margin: auto;" /></p>
 <p>Может быть, надо преобразовать значения серии?</p>
 </div>
 <div class="slide section level2">
 <h1>Доходность</h1>
-<p>Доходность – лог-значение “сегодня” минус лог-значение “вчера”</p>
+<p>Доходность – лог-значение “сегодня” минус лог-значение “вчера” или <strong>лог-доходность</strong></p>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-14-1.png" width="1344" style="display: block; margin: auto;" /></p>
 </div>
 <div id="-" class="slide section level2">
@@ -329,6 +333,9 @@ tech_stocks2[,<span class="dv">3</span>] &lt;-<span class="st"> </span>tech_stoc
 <div id="-----" class="slide section level2">
 <h1>Позволяет доходность вчера предсказать доходность сегодня?</h1>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-20-1.png" width="1344" style="display: block; margin: auto;" /></p>
+</div>
+<div id="------2" class="slide section level2">
+<h1>Позволяет доходность вчера предсказать доходность сегодня? (2)</h1>
 <p>посчитаем регрессию для доходностей</p>
 <pre><code>
 Call:
@@ -350,8 +357,8 @@ Residual standard error: 0.009706 on 16827 degrees of freedom
 Multiple R-squared:  0.0007497, Adjusted R-squared:  0.0006903 
 F-statistic: 12.62 on 1 and 16827 DF,  p-value: 0.0003819</code></pre>
 </div>
-<div id="-" class="slide section level2">
-<h1>Гистограмма доходностей</h1>
+<div id="-----" class="slide section level2">
+<h1>Гистограмма доходностей – похожа на нормальное распределение?</h1>
 <p><img src="lecture-3_files/figure-slidy/r-1.png" width="1344" style="display: block; margin: auto;" /></p>
 <p>Доходности возвращаются к среднему значению (mean reversion)</p>
 <pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
@@ -370,8 +377,8 @@ data:  data$sp500.ret
 A = 244.06, p-value &lt; 2.2e-16</code></pre>
 <p>Доходности имеют избыточный эксцесс (“тяжелые хвосты” – <strong>heavy tails</strong>).</p>
 </div>
-<div id="---" class="slide section level2">
-<h1>Волатильности устойчивы во времени</h1>
+<div id="--persistent--" class="slide section level2">
+<h1>Волатильности устойчивы (persistent) во времени</h1>
 <p>квадраты доходностей</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fancy.plot</span>(data$date, (data$sp500.ret)^<span class="dv">2</span>, <span class="dt">t=</span><span class="st">&quot;l&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;Date&quot;</span>, <span class="dt">ylab=</span><span class="st">&quot;Квадрат доходности&quot;</span>, <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-24-1.png" width="1344" style="display: block; margin: auto;" /></p>
@@ -385,10 +392,10 @@ A = 244.06, p-value &lt; 2.2e-16</code></pre>
 <div id="---" class="slide section level2">
 <h1>Основные особенности финансовых серий:</h1>
 <ol style="list-style-type: decimal">
-<li>Многие финансовые серии растут экспоненциально и имеют изменяющуюся волатильность</li>
+<li>Многие финансовые серии растут <strong>экспоненциально</strong> и имеют изменяющуюся волатильность в зависимости от уровня</li>
 <li>Наблюдения, которые находятся рядом, скоррелированны между собой</li>
-<li>Доходности имеют избыточный эксцесс (heavy tails)</li>
-<li>Волатильность устойчива во времени (persistent) и часто в финансовых данных наблюдаются кластеры волатильности</li>
+<li>Доходности имеют избыточный эксцесс (<strong>heavy tails</strong>) и распределены не нормально</li>
+<li>Волатильность устойчива во времени (persistent) и часто в финансовых данных наблюдаются <strong>кластеры волатильности</strong> - периоды большой и низкий волатильность сохраняются определенное время</li>
 </ol>
 </div>
 <div id="-----" class="slide section level2">
@@ -404,7 +411,10 @@ T =<span class="st"> </span><span class="dv">100</span>
 A &lt;-<span class="st"> </span><span class="kw">rnorm</span>(T, mu, sigma)
 <span class="kw">plot</span>(A, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)</code></pre></div>
 <p><img src="lecture-3_files/figure-slidy/unnamed-chunk-26-1.png" width="1344" style="display: block; margin: auto;" /></p>
-<p>Для серии B среднее меняется со временем</p>
+</div>
+<div id="------2" class="slide section level2">
+<h1>Понятие стационарности и почему оно важно (2)</h1>
+<p>Для серии B среднее (mean) меняется со временем</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mu =<span class="st"> </span><span class="dv">0</span>
 sigma =<span class="st"> </span><span class="dv">1</span>
 T =<span class="st"> </span><span class="dv">100</span>
@@ -446,6 +456,7 @@ alternative hypothesis: stationary</code></pre>
 data:  B
 Dickey-Fuller = -3.676, Lag order = 4, p-value = 0.02994
 alternative hypothesis: stationary</code></pre>
+<p>Тесты иногда ошибаются!</p>
 </div>
 <div id="-" class="slide section level2">
 <h1>Использованные источники:</h1>
