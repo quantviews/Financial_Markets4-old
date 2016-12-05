@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Салихов Марсель (marcel.salikhov@gmail.com)" />
+  <meta name="date" content="2016-12-05" />
+  <meta name="copyright" content="НИУ ВШЭ. Салихов Марсель (marcel.salikhov@gmail.com)"/>
+  <title>Линейные модели финансовых серий (AR)   Количественные финансы</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="libs/Slidy2/styles/slidy.css" />
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+   href="styles.css" />
+  <script src="libs/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Линейные модели финансовых серий (AR) <br> “Количественные финансы”</h1>
+  <p class="author">
+Салихов Марсель (<a href="mailto:marcel.salikhov@gmail.com">marcel.salikhov@gmail.com</a>)
+  </p>
+  <p class="date">2016-12-05</p>
+</div>
+<div id="-" class="slide section level2">
+<h1>Цели лекции</h1>
+<ul>
+<li>понять, что такое автокорреляция (serial correlation)</li>
+<li>понять базовые принципы построения моделей временных рядов</li>
+<li>понять устройство модели случайного блуждания (random walk)</li>
+<li>понять основные принципы авторегрессионных (AR) моделей</li>
+<li>изучить идентификацию параметров моделей с помощью коррелограмм (ACF)</li>
+<li>научиться строить AR-модели в R</li>
+</ul>
+</div>
+<div class="slide section level2">
+<h1>Автокорреляция</h1>
+<ul>
+<li>Когда мы работаем с финансовыми данными, обычно мы хотим научиться либо прогнозировать либо, либо симулировать их (к примеру, для риск-менеджмента). Для того, чтобы строить прогнозы или симуляции, необходимо иметь <strong>модель</strong> серии.</li>
+<li>Часто в финансовых сериях последовательные точки наблюдений влияют друг на друга в определенной степени – имеют корреляцию. С точки зрения количественного анализа задача состоит в том, чтобы идентифицировать и структурировать эти корреляции.</li>
+<li>Адекватное моделирование этой корреляции может существенно улучшить возможности прогнозирования и для более сложных моделей.</li>
+<li>Если последовательные наблюдения во временном ряде скоррелированы между собой, то мы говорим, что в ряде есть <strong>серийная корреляция</strong> (или <strong>автокорреляция</strong>)</li>
+</ul>
+</div>
+<div id="---" class="slide section level2">
+<h1>Автокорреляция - определение</h1>
+<p>Автокорреляция с лагом <span class="math inline">\(k\)</span> или <span class="math inline">\(\rho_k\)</span> определяется <strong>автоковариацией</strong>, нормализованной на дисперсию ряда:</p>
+<p><span class="math display">\[\rho_k = \frac{C_k}{\sigma^2} \]</span> <strong>Автоковариация</strong> временного ряда с лагом <span class="math inline">\(k\)</span> определяется как</p>
+<p><span class="math display">\[C_k = E[(x_t - \mu)(x_{t+k}-\mu)] \]</span> где <span class="math inline">\(\mu\)</span> - это ожидаемое значение (среднее) временного ряда. Ковариация определяет степень линейной зависимости между переменными, то есть ковариация говорит нам на сколько переменные изменяются вместе.</p>
+<p>На практике однако мы не знаем истинных значений этих параметров (среднего, дисперсии, коварации) и вынуждены оценивать <strong>выборочные</strong> значения по имеющейся у нас выборке.</p>
+</div>
+<div class="slide section level2">
+<h1>Коррелограмма</h1>
+<ul>
+<li><strong>Коррелограмма</strong> – это график, на котором отражены значения выборочной автокорреляции с последовательными лагами. Этот график позволяет увидеть структуру корреляции на каждом лаге.</li>
+<li>Основное использование коррелограммы – визуально находить автокорреляцию. Потом мы будем“убирать” ее с помощью оцененной (fitted) модели.</li>
+<li>Коррелограмма остатков модели позволяется оценивать “остаточную” автокорреляцию и понять, необходимы ли дальнейшие доработки модели.</li>
+<li>В R коррелограмма строится с помощью функции <code>acf</code>. В большинстве статистических программ также реализован этот функционал.</li>
+</ul>
+</div>
+<div id="-----" class="slide section level2">
+<h1>Коррелограмма последовательно нормально распределенных случайных величин</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>) ## 100 нормально распределенных величин со средним = 1 и дисперсией = 1
+<span class="kw">acf</span>(w)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-1-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>На лаге 0 коррелограмма всегда имеет значение 1 (корреляция наблюдений с самими собой)</li>
+<li>Прерывистые синие линии означают <strong>границы</strong> на которых мы имеем свидетельства против нулевой гипотезы, что корреляция на этом лаге равна нулю (на 5% уровне).То есть граница позволяет нам оценивать “статистически значимое” отличие корреляции от 0. На практике мы смотрим на те лаги, которые пересекают прерывистые линии (однако надо иметь в виду, что 5% этих лагов должны пересекать границы в любом случае!)</li>
+<li>Коррелограмма также позволяет оценивать сезонные эффекты (к примеру, автокорреляция с лагом 12 для месячных данных)</li>
+</ul>
+</div>
+<div id="---" class="slide section level2">
+<h1>Коррелограмма для линейного тренда</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">w &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">1</span>, <span class="dv">100</span>)
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(w, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(w)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-2-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>АСF снижается линейным образом по мере увеличения лагов</li>
+<li>Коррелограмма такого вида указывает на наличие линейного тренда в серии</li>
+</ul>
+</div>
+<div id="---" class="slide section level2">
+<h1>Коррелограмма для повторяющейся последовательности</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">w &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">1</span>:<span class="dv">10</span>, <span class="dv">10</span>)
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(w, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(w)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-3-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>ACF имеет пики на значениях 10 и 20 (наш исходный ряд имеет цикл = 10)</li>
+<li>На значениях лагов 5 и 15 отрицательная корреляция равная -0,5</li>
+<li>Коррелограмма подобного вида указывает на наличие сезонной (периодической) компоненты в серии</li>
+</ul>
+</div>
+<div id="-" class="slide section level2">
+<h1>Белый шум</h1>
+<ul>
+<li>Базовый подход к построению модели временного ряда – это получение в результате оценки <strong>остатков</strong>, в которых отсутствует автокорреляция.</li>
+<li>Если <span class="math inline">\(y_t\)</span> – наблюдаемое значение в момент времени <span class="math inline">\(t\)</span>, а <span class="math inline">\(\hat{y_t}\)</span> – предсказанное моделью значение, то остаток (residual)</li>
+</ul>
+<p><span class="math display">\[x_t = y_t - \hat{y_t}  \]</span> Рассмотрим временной ряд вида <span class="math inline">\({w_t: t=1,\ldots,n}\)</span>. Если элементы ряда <span class="math inline">\(w_t\)</span> являются независимыми одинаково распределенными (i.i.d.) величинами со средним (mean) равным 0 и дисперсией (variation), равной <span class="math inline">\(\sigma^2\)</span>, и отсутствием автокорреляции (<span class="math inline">\(Cor(w_i, w_j) \neq 0, \forall i \neq j\)</span>), тогда серия <span class="math inline">\(w_t\)</span> представляет собой <strong>белый шум</strong> (<strong>white noise</strong>).</p>
+<p>Пример гауссовского белого шума:</p>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="---random-walk" class="slide section level2">
+<h1>Модель случайного блуждания (random walk)</h1>
+<ul>
+<li>Модель random walk – это модель временного ряда, в которой текущее значение равно предыдущему значению плюс случайная компонента (белый шум).</li>
+</ul>
+<p><span class="math display">\[ x_t = x_{t-1} + w_t \]</span></p>
+<ul>
+<li>Случайное блуждание – это просто сумма отдельных белых шумов.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+x &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1000</span>)
+for (t in <span class="dv">2</span>:<span class="dv">1000</span>) x[t] &lt;-<span class="st"> </span>x[t<span class="dv">-1</span>] +<span class="st"> </span>w[t]
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(x, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(x)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-5-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="-random-walk---" class="slide section level2">
+<h1>Модель random walk для финансовых данных</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#getSymbols(&#39;MSFT&#39;, src=&#39;yahoo&#39;)</span>
+<span class="kw">acf</span>(<span class="kw">diff</span>((<span class="kw">Ad</span>(MSFT))), <span class="dt">na.action =</span> na.omit)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-6-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>Большинство пиков лагов не отличаются от нуля на 5% уровне (но есть некоторые, которые немного выше этого уровня, к примеру k= 11 )</li>
+<li>Но основе коррелограммы мы можем заключить, что модель случайного блуждания адекватно оценивает изменение скорректированных цен для акций Microsoft.</li>
+</ul>
+</div>
+<div id="r--" class="slide section level2">
+<h1>АR (авторегрессионная) модель</h1>
+<ul>
+<li>Авторегрессионная модель, или <span class="math inline">\(AR(p)\)</span> модель, создается путем регрессирования временного ряда на собственные предыдущие значения (лаги).</li>
+<li>Простейшей формой является AR(1), в которой используется только один предыдущий лаг.</li>
+<li>AR(1) модель для серии <span class="math inline">\(x_t\)</span> имеет следующий вид:</li>
+</ul>
+<p><span class="math display">\[x_t = b_0 + b_1 x_{t - 1} + \epsilon_t\]</span></p>
+<ul>
+<li>Модель AR(p) имеет следующий вид:</li>
+</ul>
+<p><span class="math display">\[x_t = b_0 + b_1 x_{t-1} + b_2 x_{t - 2} \ldots + b_p x_{t - p} + \epsilon_t\]</span></p>
+</div>
+<div id="---ar" class="slide section level2">
+<h1>Допущения для моделей AR</h1>
+<p>Для правильного функционирования AR-моделей исходные временные ряды должны быть <strong>стационарными</strong>. На практике это означает выполнение трех условий:</p>
+<ol style="list-style-type: decimal">
+<li>Ожидаемое значение временного ряда является постоянным и конечным, то есть <span class="math inline">\(E[y_t] = \mu\)</span> и <span class="math inline">\(\mu &lt; \infty\)</span> для всех значений <span class="math inline">\(t\)</span></li>
+<li>Дисперсия временного ряда является постоянной и конечной для всех периодов</li>
+<li>Ковариация временного ряда с самим собой для любого фиксированного количества периодов является постоянной и конечной.</li>
+</ol>
+<p><span class="math display">\[cov(y_t, y_{t - s}) = \lambda,  |\lambda| &lt; \infty,  \lambda =  {constant}, \\  t = 1, 2, \ldots, T; s = 0, \pm 1, \pm 2, \ldots, \pm T \]</span></p>
+<ul>
+<li>Если эти условия не выполняются, тогда результаты оценки модели не будут иметь практического смысла (оценки параметров будут смещенными, и любые тесты для модели не будут достоверными!)</li>
+</ul>
+</div>
+<div id="-ar-" class="slide section level2">
+<h1>Обоснование AR-модели</h1>
+<p>Вспомним, что модель случайного блуждания (random walk) имеет следующий вид:</p>
+<p><span class="math display">\[x_t  = x_{t-1} + w_t \]</span> то есть, каждый элемент <span class="math inline">\(x_t\)</span> зависит только от своего предыдущего значения <span class="math inline">\(x_{t-1}\)</span> и случайной компоненты белого шума (white noise)</p>
+<ul>
+<li>Авторегрессионная модель – это просто расширение модели случайного блуждания, которая включает несколько лаговых компонент и коэффициент при предыдущем лаге не обязательной равен 1.</li>
+<li>Модель является <strong>линейной</strong>, так как объясняемое значение линейным образом зависит от своих предыдущих значений</li>
+<li>Модель AR – это регрессионная модель, в которой прошлые значения используют как предикторы.<br />
+</li>
+<li>AR-компонента в финансовых данных указывает нам на то, что серия имеет трендовое (trending) или возвращающееся к среднему (mean reversion) поведение.</li>
+</ul>
+</div>
+<div id="-ar1" class="slide section level2">
+<h1>Симуляция AR(1)</h1>
+<p>Сгенерируем самостоятельно AR-процесс со значением <span class="math inline">\(b_1\)</span> = 0.7</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+ar1 &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>) <span class="co"># создадим белый шум</span>
+for (t in <span class="dv">2</span>:<span class="dv">100</span>) ar1[t] &lt;-<span class="st"> </span><span class="fl">0.7</span>*ar1[t<span class="dv">-1</span>] +<span class="st"> </span>w[t]</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-8-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>попробуем оценить модель, с тем чтобы “восстановить” исходные параметры</li>
+<li>В R для оценки AR-моделей можно использовать функцию <code>ar</code>.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ar1_est &lt;-<span class="st"> </span><span class="kw">ar</span>(ar1, <span class="dt">method =</span> <span class="st">&quot;mle&quot;</span>, <span class="dt">se.fit=</span><span class="ot">TRUE</span>)
+ar1_est$order</code></pre></div>
+<pre><code>[1] 1</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ar1_est$ar</code></pre></div>
+<pre><code>[1] 0.6558341</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ar1_est$ar +<span class="st"> </span><span class="kw">c</span>(-<span class="fl">1.96</span>, <span class="fl">1.96</span>)*<span class="kw">sqrt</span>(ar1_est$asy.var) ## доверительный интервал для параметра</code></pre></div>
+<pre><code>[1] 0.5086898 0.8029784</code></pre>
+</div>
+<div id="-ar1-c--" class="slide section level2">
+<h1>Симуляция AR(1) c отрицательным параметром</h1>
+<p>попробуем параметр <span class="math inline">\(b_1\)</span> = -0.6</p>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-2.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="r2" class="slide section level2">
+<h1>АR(2)</h1>
+<p>Рассмотрим теперь AR(2) модель, в которой используется два лага для моделирования текущего значения:</p>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>попробуем оценить параметры c помощью функции <code>ar</code></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ar2_est &lt;-<span class="st"> </span><span class="kw">ar</span>(ar2, <span class="dt">method =</span> <span class="st">&quot;mle&quot;</span>)
+ar2_est$ar</code></pre></div>
+<pre><code>[1]  0.6102312 -0.3230122</code></pre>
+</div>
+<div id="f--ar1--ar2" class="slide section level2">
+<h1>АСF для AR(1) и AR(2)</h1>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-13-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="pf--ar1--ar2" class="slide section level2">
+<h1>PАСF для AR(1) и AR(2)</h1>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-14-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="-ar-----" class="slide section level2">
+<h1>Использование AR-модели для цен на нефть</h1>
+<p>Пример – цены на нефть</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(quantmod)
+<span class="kw">getSymbols</span>(<span class="st">&quot;DCOILWTICO&quot;</span>, <span class="dt">src =</span> <span class="st">&quot;FRED&quot;</span>)</code></pre></div>
+<pre><code>[1] &quot;DCOILWTICO&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">wti &lt;-<span class="st"> </span>DCOILWTICO[<span class="st">&#39;2000::&#39;</span>] ## ограничим используемую выборку 
+<span class="kw">plot.xts</span>(wti)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-15-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="-ar------2" class="slide section level2">
+<h1>Использование AR-модели для цен на нефть (2)</h1>
+<p>посчитаем лог-доходности, чтобы перейти от нестационарной серии к стационарной (потенциально).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">wti.rtn =<span class="st"> </span><span class="kw">diff</span>(<span class="kw">log</span>(wti))
+wti.rtn &lt;-<span class="st"> </span>wti.rtn[<span class="kw">complete.cases</span>(wti.rtn),]
+<span class="kw">plot</span>(wti.rtn)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-16-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-17-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">wti_ar &lt;-<span class="st"> </span><span class="kw">ar</span>(wti.rtn, <span class="dt">na.action=</span>na.omit)
+wti_ar$order</code></pre></div>
+<pre><code>[1] 23</code></pre>
+<p>Модель имеет 23 лага! Ограничим модель 2 лагами максимально.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">wti_ar &lt;-<span class="st"> </span><span class="kw">ar</span>(wti.rtn, <span class="dt">na.action=</span>na.omit, <span class="dt">order.max =</span> <span class="dv">2</span>)
+wti_ar$order</code></pre></div>
+<pre><code>[1] 2</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ar2_est$ar</code></pre></div>
+<pre><code>[1]  0.6102312 -0.3230122</code></pre>
+<p>посмотрим на остатки модели</p>
+</div>
+<div id="--ar2----" class="slide section level2">
+<h1>Остатки для AR(2)-модель цен на нефть</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">resid &lt;-<span class="st"> </span><span class="kw">residuals</span>(wti_ar)
+<span class="kw">plot</span>(resid, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-20-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(resid)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-20-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Судя по АСF остатков, AR(2) не очень хорошо подходит для моделирования динамики цен на нефть!</p>
+</div>
+<div id="-" class="slide section level2">
+<h1>Использованные источники:</h1>
+<ol style="list-style-type: decimal">
+<li>“An Introduction to Analysis of Financial Data with R” (Ruey S. Tsay)</li>
+<li>“Statistics and Data Analysis for Financial Engineering” (David Ruppert &amp; David Matteson)</li>
+<li>Analyzing Financial Data and Implementing Financial Models Using R (Clifford Ang)</li>
+<li>Forecasting Financial Time Series (Patrick Perry)</li>
+<li>Autoregressive Moving Average ARMA(p, q) Models for Time Series Analysis (Michael Halls-Moore)</li>
+</ol>
+</div>
+
+  <!-- dynamically load mathjax for compatibility with self-contained -->
+  <script>
+    (function () {
+      var script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      document.getElementsByTagName("head")[0].appendChild(script);
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+base
+RevoUtilsMath
+RColorBrewer
+knitr
+zoo
+xts
+TTR
+quantmod
+bitops
+RCurl
+XML
+rusquant
+timeDate
+forecast
+ggplot2
