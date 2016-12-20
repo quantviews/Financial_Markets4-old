@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Салихов Марсель (marcel.salikhov@gmail.com)" />
+  <meta name="date" content="2016-12-20" />
+  <meta name="copyright" content="НИУ ВШЭ. Салихов Марсель (marcel.salikhov@gmail.com)"/>
+  <title>Линейные модели финансовых серий   (MA, ARMA и ARIMA)   Количественные финансы</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="libs/Slidy2/styles/slidy.css" />
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+   href="styles.css" />
+  <script src="libs/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Линейные модели финансовых серий <br> (MA, ARMA и ARIMA) <br> “Количественные финансы”</h1>
+  <p class="author">
+Салихов Марсель (<a href="mailto:marcel.salikhov@gmail.com">marcel.salikhov@gmail.com</a>)
+  </p>
+  <p class="date">2016-12-20</p>
+</div>
+<div id="-" class="slide section level2">
+<h1>Цели лекции</h1>
+<ul>
+<li>понять основные принципы moving average (MA) моделей</li>
+<li>научиться симулировать MA-модели</li>
+<li>научиться оценивать MA-модели на финансовых данных в R</li>
+<li>понять принципы применения критериев AIC и BIC для выбора подходящей модели</li>
+<li>научиться использовать критирий Льюнга-Бокса (Ljung–Box test)</li>
+<li>понять, как строятся ARMA модели<br />
+</li>
+<li>научиться строить прогнозы для ARMA моделей с помощью пакета <code>forecast</code></li>
+</ul>
+</div>
+<div id="moving-average" class="slide section level2">
+<h1>Moving average</h1>
+<ul>
+<li>На прошлой лекции мы рассмотрели авторегрессионные (AR) модели. В конечном счете мы пришли к тому, что AR-модели для настоящих финансовых данных требуют слишком большого количества параметров для оценки и приводят к “подгонке” (overfitting).</li>
+<li>MA-модели <em>схожи</em> с AR-моделями, однако в отличие от них модель представляет собой не линейную комбинацию прошлых значений, а линейную комбинацию прошлых компонент белого шума.</li>
+<li>МA-модель “видит” случайные шоки белого шума непосредственно для каждого текущего значения серии. AR-модель же “видит” шоки косвенным образом, через регрессирование к своим предыдущим значениям.</li>
+<li>Однако MA-модель порядка <span class="math inline">\(q\)</span> видит последние q шоков, в то время как AR(p) модель будет учитывать все предыдущие шоки с экспоненциальным убыванием.</li>
+</ul>
+</div>
+<div id="-ma-" class="slide section level2">
+<h1>Определение MA-модели</h1>
+<p>Если серия временного ряда <span class="math inline">\({x_t}\)</span> является моделью скользящего среднего порядка <span class="math inline">\(q\)</span> (MA(q)), то это означает, что</p>
+<p><span class="math display">\[ x_t = w_t + \beta_1 w_{t-1} + \ldots + \beta_q w_{t-q} \]</span> где <span class="math inline">\({w_t}\)</span> – это белый шум с <span class="math inline">\(E(w_t)=0\)</span> и дисперсией <span class="math inline">\(\sigma^2\)</span>.</p>
+<ul>
+<li>MA-модель всегда стационарна</li>
+<li>В MA-модель можно включать константу</li>
+<li>Обычно модели MA оценивают методом максимального правдоподобия (или другими численными методами). Аналитическая оценка (как МНК) затруднена.</li>
+</ul>
+</div>
+<div id="ma1-" class="slide section level2">
+<h1>MA(1) модель</h1>
+<p>Попробуем симулировать MA(1) c параметром <span class="math inline">\(\beta = 0.6\)</span>. То есть мы симулируем модель вида:</p>
+<p><span class="math display">\[ x_t  = w_t + 0.6 w_{t-1} \]</span></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"> <span class="kw">set.seed</span>(<span class="dv">123</span>)
+ x &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>)
+for (t in <span class="dv">2</span>:<span class="dv">100</span>) x[t] &lt;-<span class="st"> </span>w[t] +<span class="st"> </span><span class="fl">0.6</span>*w[t<span class="dv">-1</span>]
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(x, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-1-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>Для MA-модели все автокорреляции с лагом <span class="math inline">\(k&gt;q\)</span> должны быть равны 0.</li>
+</ul>
+</div>
+<div id="--ma1-" class="slide section level2">
+<h1>Оценка симулированной MA(1)-модели</h1>
+<p>Мы будем использовать функцию <code>arima</code> для оценки MA-моделей (функция <code>Arima</code> из пакета <code>forecast</code> позволяет оценивать модели с константой).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x.ma &lt;-<span class="st"> </span><span class="kw">Arima</span>(x, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>))
+x.ma</code></pre></div>
+<pre><code>Series: x 
+ARIMA(0,0,1) with non-zero mean 
+
+Coefficients:
+         ma1  intercept
+      0.7240     0.1430
+s.e.  0.0898     0.1546
+
+sigma^2 estimated as 0.8271:  log likelihood=-131.76
+AIC=269.53   AICc=269.78   BIC=277.34</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x.ma$coef[<span class="dv">1</span>]+<span class="kw">c</span>(-<span class="fl">1.96</span>, <span class="fl">1.96</span>)*<span class="fl">0.0898</span>  <span class="co">#доверительный интерваля для беты</span></code></pre></div>
+<pre><code>[1] 0.5480362 0.9000522</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">confint</span>(x.ma)</code></pre></div>
+<pre><code>               2.5 %    97.5 %
+ma1        0.5481109 0.8999776
+intercept -0.1600075 0.4459076</code></pre>
+<ul>
+<li>Коэффициенты отличаются значимым образом от 0.</li>
+<li>Доверительные интервалы включат “истинные” значения коэффициентов</li>
+</ul>
+</div>
+<div id="a1-----0.6" class="slide section level2">
+<h1>МA(1)-модель с коэффициентом -0.6</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+x &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>)
+for (t in <span class="dv">2</span>:<span class="dv">100</span>) x[t] &lt;-<span class="st"> </span>w[t] -<span class="st"> </span><span class="fl">0.6</span>*w[t<span class="dv">-1</span>]
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(x, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-3-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>оценка симулированной модели</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x.ma &lt;-<span class="st"> </span><span class="kw">arima</span>(x, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>))
+x.ma</code></pre></div>
+<pre><code>
+Call:
+arima(x = x, order = c(0, 0, 1))
+
+Coefficients:
+          ma1  intercept
+      -0.6337     0.0370
+s.e.   0.0788     0.0338
+
+sigma^2 estimated as 0.8227:  log likelihood = -132.39,  aic = 270.78</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x.ma$coef[<span class="dv">1</span>]+<span class="kw">c</span>(-<span class="fl">1.96</span>, <span class="fl">1.96</span>)*<span class="st"> </span><span class="fl">0.0788</span>  <span class="co">#доверительный интерваля для беты</span></code></pre></div>
+<pre><code>[1] -0.7881117 -0.4792157</code></pre>
+</div>
+<div id="ma2-" class="slide section level2">
+<h1>MA(2)-модель</h1>
+<p>симулируем модель:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+x &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1000</span>)
+for (t in <span class="dv">4</span>:<span class="dv">1000</span>) x[t] &lt;-<span class="st"> </span>w[t] +<span class="st"> </span><span class="fl">0.6</span>*w[t<span class="dv">-1</span>] +<span class="st"> </span><span class="fl">0.3</span>*w[t<span class="dv">-2</span>] 
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(x, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-5-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>оценим модель</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x.ma &lt;-<span class="st"> </span><span class="kw">arima</span>(x, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>))
+x.ma</code></pre></div>
+<pre><code>
+Call:
+arima(x = x, order = c(0, 0, 2))
+
+Coefficients:
+         ma1     ma2  intercept
+      0.5852  0.2827     0.0307
+s.e.  0.0311  0.0307     0.0585
+
+sigma^2 estimated as 0.9822:  log likelihood = -1410.14,  aic = 2828.29</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">confint</span>(x.ma)</code></pre></div>
+<pre><code>                2.5 %    97.5 %
+ma1        0.52422837 0.6461799
+ma2        0.22251632 0.3429303
+intercept -0.08393561 0.1453965</code></pre>
+</div>
+<div id="acf--ma1--ma2" class="slide section level2">
+<h1>ACF для MA(1) и MA(2)</h1>
+<p>Для симуляции сложных ARMA-моделей можно использовать функцию <code>arima.sim</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ma1 &lt;-<span class="st"> </span><span class="kw">arima.sim</span>(<span class="dt">n=</span><span class="dv">1000</span>, <span class="dt">model=</span><span class="kw">list</span>(<span class="dt">ma=</span><span class="kw">c</span>(<span class="fl">0.5</span>)))
+ma1 &lt;-<span class="st"> </span><span class="kw">arima.sim</span>(<span class="dt">n=</span><span class="dv">1000</span>, <span class="dt">model=</span><span class="kw">list</span>(<span class="dt">ma=</span><span class="kw">c</span>(<span class="fl">0.5</span>, -<span class="fl">0.3</span>)))
+<span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))
+<span class="kw">Acf</span>(ma1, <span class="dt">na.action =</span> na.omit)
+<span class="kw">Acf</span>(ma2, <span class="dt">na.action =</span> na.omit)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-7-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="pacf--ma1--ma2" class="slide section level2">
+<h1>PACF для MA(1) и MA(2)</h1>
+<ul>
+<li>PACF показывает частичные автокорреляции (partial autocorrelations) в ряде на разных лагах.</li>
+<li>Разница между <code>Acf</code> и <code>acf</code> (<code>Pacf</code> и <code>pacf</code>) заключается в том, что первые функции не отображают на графике корреляции на лаге 0, которая по определению будет равна 1. Это позволяет лучше “видеть” остальные лаги.</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))
+<span class="kw">Pacf</span>(ma1)
+<span class="kw">Pacf</span>(ma2)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-8-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="-" class="slide section level2">
+<h1>Индекс ММВБ</h1>
+<p>Попробуем построить MA-модель для доходностей индекса ММВБ. Исходный ряд выглядит следующим образом:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#library(rusquant)</span>
+<span class="co">#MICEX &lt;- rusquant::getSymbols.Finam(&#39;MICEX&#39;,from = &quot;2001-01-01&quot;) # ммвб</span>
+<span class="kw">chartSeries</span>(MICEX, <span class="dt">theme =</span> <span class="st">&#39;white&#39;</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-9-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>в логарифмах</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">log.MICEX &lt;-<span class="st"> </span><span class="kw">log</span>(MICEX$MICEX.Close)
+<span class="kw">plot</span>(log.MICEX)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(log.MICEX)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(log.MICEX)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-11-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>для лог-доходностей</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">diff.log.MICEX &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="ot">NA</span>, <span class="kw">diff</span>(log.MICEX))
+<span class="kw">plot</span>(diff.log.MICEX, <span class="dt">type=</span><span class="st">&#39;l&#39;</span>, <span class="dt">col =</span> <span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-12-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(diff.log.MICEX)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-13-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(diff.log.MICEX)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-13-2.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="ma1----" class="slide section level2">
+<h1>MA(1)-модель для индекса ММВБ</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">micex.ma &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>))
+micex.ma</code></pre></div>
+<pre><code>Series: diff.log.MICEX 
+ARIMA(0,0,1) with non-zero mean 
+
+Coefficients:
+         ma1  intercept
+      0.0266      7e-04
+s.e.  0.0165      3e-04
+
+sigma^2 estimated as 0.0004229:  log likelihood=9811.81
+AIC=-19617.62   AICc=-19617.61   BIC=-19598.75</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">acf</span>(micex.ma$res[-(<span class="dv">1</span>:<span class="dv">2</span>)])</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-14-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="-ma1---" class="slide section level2">
+<h1>Остатки MA(1) для индекса ММВБ</h1>
+<ul>
+<li>Остатки MA(1)-модели не являются белым шумом. В остатках сохраняется значимая автокорреляция на лагах 13,20,26,34.</li>
+</ul>
+<p>Построим график остатков:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(micex.ma$residuals)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-15-1.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="ma2----" class="slide section level2">
+<h1>MA(2) для доходностей индекса ММВБ</h1>
+<p>попробуем оценить MA(2)-модель</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">micex.ma &lt;-<span class="st"> </span><span class="kw">arima</span>(diff.log.MICEX, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>))
+micex.ma</code></pre></div>
+<pre><code>
+Call:
+arima(x = diff.log.MICEX, order = c(0, 0, 2))
+
+Coefficients:
+         ma1      ma2  intercept
+      0.0226  -0.0378      7e-04
+s.e.  0.0159   0.0154      3e-04
+
+sigma^2 estimated as 0.0004222:  log likelihood = 9814.8,  aic = -19621.6</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">acf</span>(micex.ma$res[-(<span class="dv">1</span>:<span class="dv">2</span>)])</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-16-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>MA(2)-модель позволила “убрать” автокорреляцию на лаге 2, но автокорреляция на других лагах сохранилась.</li>
+</ul>
+</div>
+<div id="ma3----" class="slide section level2">
+<h1>MA(3)-модель для индекса ММВБ</h1>
+<p>попробуем оценить MA(3)-модель</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">micex.ma &lt;-<span class="st"> </span><span class="kw">arima</span>(diff.log.MICEX, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">3</span>))
+micex.ma</code></pre></div>
+<pre><code>
+Call:
+arima(x = diff.log.MICEX, order = c(0, 0, 3))
+
+Coefficients:
+         ma1      ma2      ma3  intercept
+      0.0263  -0.0401  -0.0363      7e-04
+s.e.  0.0159   0.0154   0.0157      3e-04
+
+sigma^2 estimated as 0.0004217:  log likelihood = 9817.46,  aic = -19624.91</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">acf</span>(micex.ma$res[-(<span class="dv">1</span>:<span class="dv">2</span>)])</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-17-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>Построение MA(3)-модели не позволило улучшить автокоррелограмму.</li>
+</ul>
+</div>
+<div id="--ar--ma-" class="slide section level2">
+<h1>Выводы по AR и MA моделям</h1>
+<ul>
+<li>Оба типа моделей - AR и MA - позволяют частично объяснять автокорреляцию в сериях лог-доходностей акций.</li>
+<li>Однако кластеризация волатильности и эффекты “длинной памяти” все же остаются в остатках.</li>
+<li>Может ли объединение двух подходов улучшить ситуацию?</li>
+</ul>
+</div>
+<div id="-" class="slide section level2">
+<h1>Информационные критерии</h1>
+<ul>
+<li>Информационные критерии – это инструменты, которые помогают нам выбирать “лучшие” модели. Информационный критерий оценивает “качество” модели по сравнению с альтернативными спецификациями модели.</li>
+<li>Чаще всего используются два критерия - критерий Акаике (AIC) и Байесовский информационный критерий (BIC).</li>
+<li>Общая идея всех информационных критериев заключается в оценке баланса между прогностический точностью модели и ее сложностью.</li>
+<li>Мы хотим строить минимально сложные модели (“бритва Оккама”), но которые при этом имели максимальную объясняющую способность</li>
+</ul>
+</div>
+<div id="--" class="slide section level2">
+<h1>Информационный критерий Акаике</h1>
+<p>Если мы используем функцию правдоподобия (likelyhood function) для оценки модели c <span class="math inline">\(k\)</span> параметрами и значение <span class="math inline">\(L\)</span> максимизирует функцию правдоподобия, то AIC рассчитывается как:</p>
+<p><span class="math display">\[ AIC = -2log(L) + 2k \]</span></p>
+<ul>
+<li>Мы предпочитаем модели, которые имеют <strong>минимальное</strong> значение AIC.</li>
+<li>Как видно из формулы, AIC увеличивается по мере роста количества параметров (k) и снижается по мере роста log-likelyhood (L), то есть точности оценки</li>
+<li>Абсолютные значения AIC не имеют значения, мы сравниваем только значения AIC для различных моделей, которые построены на одних данных.</li>
+<li>Значения информационных критериев для разных серий не сравнимы между собой!</li>
+</ul>
+</div>
+<div id="---bic" class="slide section level2">
+<h1>Байесовский информационный критерий (BIC)</h1>
+<p>BIC рассчитывается как:</p>
+<p><span class="math display">\[ BIC = -2log(L) + k log(n) \]</span> где <span class="math inline">\(n\)</span> - количество наблюдений в рассматриваемой серии.</p>
+<ul>
+<li>AIC и BIC могут указывать на разные модели как “лучшие” и противоречить друг другу</li>
+<li>Можно использовать AIC как более предпочтительный критерий</li>
+</ul>
+</div>
+<div id="arma-" class="slide section level2">
+<h1>ARMA-модели</h1>
+<ul>
+<li>AR-модели учитывают прошлое поведение (лаги) в качестве входных параметров. С сутевой точки зрения это позволяет учитывать некоторые особенности поведения участников финансового рынка рынка, такое как mean reversion (возвращение к среднему) или momentum (инерционность финансовых рынков – после роста сохраняется тенденция к росту, и – наоборот).</li>
+<li>MA-модели используются для оценки “информационных шоков” в серии. К примеру, такими шоками могут быть неожиданные события или поступление новой информации (выход квартальной финансовой отчетности) и так далее. То есть, MA-модель позволяет оценивать единовременную реакцию серии на шоки.<br />
+</li>
+<li>ARMA-модели учитывают оба этих аспекта при моделировании финансовых серий.</li>
+<li>ARMA-модели в принципе не учитывают эффекты “кластеризации волатильности”. Это не условные гетероскедастичные модели. Мы считаем, что дисперсия является постоянной в ARMA-моделях.</li>
+</ul>
+</div>
+<div id="-arma-" class="slide section level2">
+<h1>Определение ARMA-модели</h1>
+<p>Если серия временного ряда <span class="math inline">\({x_t}\)</span> является моделью ARMA(p,q), то</p>
+<p><span class="math display">\[ x_t = \alpha_1 x_{t-1} + \alpha_2 x_{t-2} + \ldots + w_t + \beta_1 w_{t-1} + \beta_2 w_{t-2} + \ldots + \beta_q w_{t-q} \]</span></p>
+<ul>
+<li>Основное преимущество ARMA-модели по сравнению c AR или MA, заключается в том, что как правило она требует меньше параметров для оценки.</li>
+<li>Вспомните, что AR-модели на настоящих данных требовали оценки коэффициентов для 20-30 лагов.</li>
+</ul>
+</div>
+<div id="-arma11" class="slide section level2">
+<h1>Симулирование ARMA(1,1)</h1>
+<p>Простейшая ARMA-модель – это ARMA(1,1). Модель имеет вид:</p>
+<p><span class="math display">\[x_t + \alpha x_{t-1} + w_t + \beta w_{t-1}  \]</span></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+x &lt;-<span class="st"> </span><span class="kw">arima.sim</span>(<span class="dt">n=</span><span class="dv">1000</span>, <span class="dt">model=</span><span class="kw">list</span>(<span class="dt">ar=</span><span class="fl">0.5</span>, <span class="dt">ma=</span>-<span class="fl">0.5</span>))
+<span class="kw">plot</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-18-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-18-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>Модель не имеет значимых автокорреляция на всех лагах</li>
+</ul>
+<p>оценим симулированную модель:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">arima</span>(x, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>))</code></pre></div>
+<pre><code>Warning in arima(x, order = c(1, 0, 1)): possible convergence problem:
+optim gave code = 1</code></pre>
+<pre><code>
+Call:
+arima(x = x, order = c(1, 0, 1))
+
+Coefficients:
+         ar1      ma1  intercept
+      0.5997  -0.6334     0.0158
+s.e.  0.3777   0.3658     0.0289
+
+sigma^2 estimated as 0.9951:  log likelihood = -1416.46,  aic = 2840.93</code></pre>
+</div>
+<div id="-arma22" class="slide section level2">
+<h1>Симулирование ARMA(2,2)</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+x &lt;-<span class="st"> </span><span class="kw">arima.sim</span>(<span class="dt">n=</span><span class="dv">1000</span>, <span class="dt">model=</span><span class="kw">list</span>(<span class="dt">ar=</span><span class="kw">c</span>(<span class="fl">0.5</span>, -<span class="fl">0.25</span>), <span class="dt">ma=</span><span class="kw">c</span>(<span class="fl">0.5</span>, -<span class="fl">0.3</span>)))
+<span class="kw">plot</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-20-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(x)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-20-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>оценим модель</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Arima</span>(x, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">2</span>))</code></pre></div>
+<pre><code>Series: x 
+ARIMA(2,0,2) with non-zero mean 
+
+Coefficients:
+         ar1      ar2     ma1      ma2  intercept
+      0.5099  -0.2693  0.4636  -0.3309     0.0269
+s.e.  0.1157   0.0346  0.1190   0.1122     0.0473
+
+sigma^2 estimated as 1.009:  log likelihood=-1422.06
+AIC=2856.13   AICc=2856.21   BIC=2885.58</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">confint</span>(<span class="kw">arima</span>(x, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">2</span>)))</code></pre></div>
+<pre><code>                2.5 %     97.5 %
+ar1        0.28315655  0.7366981
+ar2       -0.33701341 -0.2015434
+ma1        0.23045772  0.6968166
+ma2       -0.55079028 -0.1110161
+intercept -0.06574923  0.1196155</code></pre>
+<ul>
+<li>Доверительные интервалы содержат настоящие значения параметров ar=c(0.5, -0.25), ma=c(0.5, -0.3), но являются достаточно широкими</li>
+</ul>
+</div>
+<div id="-arma-" class="slide section level2">
+<h1>Построение ARMA-моделей</h1>
+<p>Построим несколько моделей для доходностей индекса ММВБ</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># без константы (сводобного члена)</span>
+fit<span class="fl">.00</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.01</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.02</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.10</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.11</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.12</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.20</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.21</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+fit<span class="fl">.22</span> &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="dt">include.constant=</span><span class="ot">FALSE</span>)
+
+<span class="co"># с константой </span>
+fit.00c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.01c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.02c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.10c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.11c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.12c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.20c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.21c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+fit.22c &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">2</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># аггрегируем результаты</span>
+models &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">p =</span> <span class="kw">rep</span>(<span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">2</span>), <span class="dv">2</span>),
+                     <span class="dt">d =</span> <span class="kw">rep</span>(<span class="dv">0</span>, <span class="dv">18</span>),
+                     <span class="dt">q =</span> <span class="kw">rep</span>(<span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="dv">6</span>),
+                     <span class="dt">include.constant =</span> <span class="kw">c</span>(<span class="kw">rep</span>(<span class="ot">FALSE</span>, <span class="dv">9</span>), <span class="kw">rep</span>(<span class="ot">TRUE</span>, <span class="dv">9</span>)),
+                     <span class="dt">loglik =</span> <span class="kw">c</span>(fit<span class="fl">.00</span>$loglik, fit<span class="fl">.01</span>$loglik, fit<span class="fl">.02</span>$loglik,
+                                fit<span class="fl">.10</span>$loglik, fit<span class="fl">.11</span>$loglik, fit<span class="fl">.12</span>$loglik,
+                                fit<span class="fl">.20</span>$loglik, fit<span class="fl">.21</span>$loglik, fit<span class="fl">.22</span>$loglik,
+                                fit.00c$loglik, fit.01c$loglik, fit.02c$loglik,
+                                fit.10c$loglik, fit.11c$loglik, fit.12c$loglik,
+                                fit.20c$loglik, fit.21c$loglik, fit.22c$loglik),
+                     <span class="dt">aicc =</span> <span class="kw">c</span>(fit<span class="fl">.00</span>$aicc, fit<span class="fl">.01</span>$aicc, fit<span class="fl">.02</span>$aicc,
+                                fit<span class="fl">.10</span>$aicc, fit<span class="fl">.11</span>$aicc, fit<span class="fl">.12</span>$aicc,
+                                fit<span class="fl">.20</span>$aicc, fit<span class="fl">.21</span>$aicc, fit<span class="fl">.22</span>$aicc,
+                                fit.00c$aicc, fit.01c$aicc, fit.02c$aicc,
+                                fit.10c$aicc, fit.11c$aicc, fit.12c$aicc,
+                                fit.20c$aicc, fit.21c$aicc, fit.22c$aicc),
+                      <span class="dt">bic =</span> <span class="kw">c</span>(fit<span class="fl">.00</span>$bic, fit<span class="fl">.01</span>$bic, fit<span class="fl">.02</span>$bic,
+                                fit<span class="fl">.10</span>$bic, fit<span class="fl">.11</span>$bic, fit<span class="fl">.12</span>$bic,
+                                fit<span class="fl">.20</span>$bic, fit<span class="fl">.21</span>$bic, fit<span class="fl">.22</span>$bic,
+                                fit.00c$bic, fit.01c$bic, fit.02c$bic,
+                                fit.10c$bic, fit.11c$bic, fit.12c$bic,
+                                fit.20c$bic, fit.21c$bic, fit.22c$bic)
+                     )
+<span class="kw">print</span>(models, <span class="dt">digits=</span><span class="dv">6</span>)</code></pre></div>
+<pre><code>   p d q include.constant  loglik     aicc      bic
+1  0 0 0            FALSE 9808.20 -19614.4 -19608.1
+2  0 0 1            FALSE 9809.60 -19615.2 -19602.6
+3  0 0 2            FALSE 9812.40 -19618.8 -19599.9
+4  1 0 0            FALSE 9809.49 -19615.0 -19602.4
+5  1 0 1            FALSE 9810.28 -19614.6 -19595.7
+6  1 0 2            FALSE 9813.39 -19618.8 -19593.6
+7  2 0 0            FALSE 9812.85 -19619.7 -19600.8
+8  2 0 1            FALSE 9813.66 -19619.3 -19594.2
+9  2 0 2            FALSE 9814.35 -19618.7 -19587.2
+10 0 0 0             TRUE 9810.52 -19617.0 -19604.5
+11 0 0 1             TRUE 9811.81 -19617.6 -19598.8
+12 0 0 2             TRUE 9814.80 -19621.6 -19596.4
+13 1 0 0             TRUE 9811.70 -19617.4 -19598.5
+14 1 0 1             TRUE 9812.51 -19617.0 -19591.9
+15 1 0 2             TRUE 9815.93 -19621.8 -19590.4
+16 2 0 0             TRUE 9815.25 -19622.5 -19597.3
+17 2 0 1             TRUE 9816.19 -19622.4 -19590.9
+18 2 0 2             TRUE 9816.78 -19621.5 -19583.8</code></pre>
+</div>
+<div id="---aic" class="slide section level2">
+<h1>Лучшая модель по AIC</h1>
+<p>выберем “лучшую” модель по критерию Акаике</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2)
+models$descr &lt;-<span class="st"> </span><span class="kw">paste</span>(models$p, models$q, models$include.constant)
+p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(models, <span class="kw">aes</span>(descr,aicc))
+p +<span class="st"> </span><span class="kw">geom_point</span>()+<span class="kw">coord_flip</span>()+<span class="kw">theme_minimal</span>()</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-24-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">models[<span class="kw">which</span>(models$aicc ==<span class="st"> </span><span class="kw">min</span>(models$aicc)),]</code></pre></div>
+<pre><code>   p d q include.constant   loglik      aicc       bic    descr
+16 2 0 0             TRUE 9815.249 -19622.49 -19597.34 2 0 TRUE</code></pre>
+<p>какая модель минимизирует AIC?</p>
+</div>
+<div id="---aic" class="slide section level2">
+<h1>Оценка “лучшей” модели (AIC)</h1>
+<p>выбрали “вторую” лучшую модель по критерию AIC</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit.best &lt;-<span class="st"> </span><span class="kw">Arima</span>(diff.log.MICEX, <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">include.constant=</span><span class="ot">TRUE</span>)
+<span class="kw">print</span>(fit.best)</code></pre></div>
+<pre><code>Series: diff.log.MICEX 
+ARIMA(2,0,1) with non-zero mean 
+
+Coefficients:
+         ar1      ar2      ma1  intercept
+      0.3544  -0.0529  -0.3296      7e-04
+s.e.  0.2367   0.0160   0.2369      3e-04
+
+sigma^2 estimated as 0.0004222:  log likelihood=9816.19
+AIC=-19622.37   AICc=-19622.36   BIC=-19590.92</code></pre>
+</div>
+<div id="--arma" class="slide section level2">
+<h1>Остатки модели ARMA</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">resid &lt;-<span class="st"> </span><span class="kw">residuals</span>(fit.best)
+<span class="kw">plot</span>(resid, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>, <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-26-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(resid)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-26-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(resid)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-26-3.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>даже в “лучшей” модели ARMA сохранилась автокорреляция в остатках</li>
+</ul>
+</div>
+<div id="c-ljung-box" class="slide section level2">
+<h1>Cтатистика Ljung-Box</h1>
+<ul>
+<li>Статистика Ljung-Box является классическим тестом на гипотезу о том, что набор автокорреляций в модели совместно отличается от 0.</li>
+<li>Тест не оценивает каждый индивидуальный лаг на отличие от 0, а оценивает совокупность лагов одновременно.</li>
+<li><span class="math inline">\(H0\)</span>: серия на каждом лаге является i.i.d., то есть корреляции между между лагами равны нулю</li>
+<li><span class="math inline">\(H1\)</span>: серия на каждом лаге не является i.i.d., то есть в ней сохраняется автокорреляция</li>
+</ul>
+<p>Формально тест рассчитывает следующую статистику:</p>
+<p><span class="math display">\[ Q = n(n+2) \sum_{k=1}^{h} \frac{\hat{\rho}^2}{n-k} \]</span></p>
+<p>где <span class="math inline">\(n\)</span> – количество наблюдений, <span class="math inline">\(\hat{\rho}^2\)</span> – выборочная автокорреляция на лаге <span class="math inline">\(k\)</span>, <span class="math inline">\(h\)</span> – тестируемый лаг.</p>
+<ul>
+<li>Мы отвергаем нулевую гипотезу <span class="math inline">\(H0\)</span>, если <span class="math inline">\(Q &gt; \chi^2_{a,h}\)</span> (для распределения хи-квадрат с <span class="math inline">\(h\)</span> степенями свободы).</li>
+<li>Мы можем не вдаваться в подробности оценки, а использовать функцию <code>Box.test</code> для проведения теста:</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Box.test</span>(resid, <span class="dt">lag=</span><span class="dv">10</span>, <span class="dt">type =</span> <span class="st">&quot;Ljung-Box&quot;</span>, <span class="dt">fitdf=</span><span class="dv">3</span>)</code></pre></div>
+<pre><code>
+    Box-Ljung test
+
+data:  resid
+X-squared = 19.738, df = 7, p-value = 0.006165</code></pre>
+<ul>
+<li>если мы используем тест на остатках модели, то необходимо скорректировать количество степеней свободы (<code>fitdf</code>)</li>
+<li>fitdf = p +q и тестируемые лаги (<code>lag</code>) должны быть больше <code>fitdf</code></li>
+<li>Тест указывает на сохранение автокорреляции в остатках модели</li>
+</ul>
+</div>
+<div id="-" class="slide section level2">
+<h1>Построение прогноза</h1>
+<p>Для построения прогноза необходимо использовать функцию <code>forecast</code> из одноименного пакета:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">forecast</span>(fit.best, <span class="dt">h=</span><span class="dv">100</span>, <span class="dt">level=</span><span class="dv">95</span>, <span class="dt">fan =</span> <span class="ot">TRUE</span>), <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-28-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>h – определяет длину прогноза</li>
+<li>level – определяет доверительные интервалы для интервалов предсказания (prediction interval)</li>
+</ul>
+</div>
+<div id="----auto.arima" class="slide section level2">
+<h1>Построение прогноза с помощью auto.arima</h1>
+<ul>
+<li>Пакет forecast позволяет автоматически находить лучшие спецификации ARMA моделей</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit1 &lt;-<span class="st"> </span><span class="kw">auto.arima</span>(diff.log.MICEX, <span class="dt">ic =</span> <span class="st">&#39;aicc&#39;</span>)
+fit1</code></pre></div>
+<pre><code>Series: diff.log.MICEX 
+ARIMA(4,0,0) with non-zero mean 
+
+Coefficients:
+         ar1      ar2      ar3     ar4  intercept
+      0.0250  -0.0402  -0.0325  0.0285      7e-04
+s.e.  0.0159   0.0159   0.0159  0.0159      3e-04
+
+sigma^2 estimated as 0.0004217:  log likelihood=9818.88
+AIC=-19625.75   AICc=-19625.73   BIC=-19588.01</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fcst &lt;-<span class="st"> </span><span class="kw">forecast</span>(fit1, <span class="dt">h=</span><span class="dv">100</span>, <span class="dt">level=</span><span class="dv">95</span>, <span class="dt">fan =</span> <span class="ot">TRUE</span>)
+<span class="kw">plot</span>(<span class="kw">forecast</span>(fit1, <span class="dt">h=</span><span class="dv">100</span>, <span class="dt">level=</span><span class="dv">95</span>, <span class="dt">fan =</span> <span class="ot">TRUE</span>), <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-29-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fcst$mean[<span class="dv">1</span>:<span class="dv">50</span>], <span class="dt">type  =</span> <span class="st">&#39;l&#39;</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-29-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<ul>
+<li>Мы “нашли” вручную модель ARMA(2,1) или ARMA(2,0), в то время как ’auto.arima` предлагает нам модель ARMA(4,0).</li>
+</ul>
+</div>
+<div id="arima-" class="slide section level2">
+<h1>ARIMA-модели</h1>
+<ul>
+<li>Серия {x_t} является <span class="math inline">\(ARIMA(p,d,q)\)</span> моделью, если <span class="math inline">\(\Delta^d x_t\)</span> является моделью <span class="math inline">\(ARMA(p,q)\)</span>.</li>
+<li>К примеру, если лог-доходности моделируются ARMA(p,q), то лог-цены будут ARIMA(p,1,q).</li>
+<li>Random walk является моделью ARIMA(0,1,0), а белый шум - моделью ARIMA(0,0,0).</li>
+</ul>
+<p>мы также можем находить модели и строить прогнозы для нестационарных серий c помощью <code>auto.arima</code></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit2 &lt;-<span class="st"> </span><span class="kw">auto.arima</span>(log.MICEX, <span class="dt">ic =</span> <span class="st">&#39;aicc&#39;</span>)
+fit2</code></pre></div>
+<pre><code>Series: log.MICEX 
+ARIMA(3,1,3) with drift         
+
+Coefficients:
+          ar1     ar2     ar3     ma1      ma2      ma3  drift
+      -0.2862  -0.029  0.6264  0.3127  -0.0027  -0.6603  7e-04
+s.e.   0.1683   0.167  0.1472  0.1614   0.1644   0.1406  3e-04
+
+sigma^2 estimated as 0.0004212:  log likelihood=9823.16
+AIC=-19630.31   AICc=-19630.28   BIC=-19580</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">forecast</span>(fit2, <span class="dt">h=</span><span class="dv">100</span>, <span class="dt">level=</span><span class="dv">95</span>, <span class="dt">fan =</span> <span class="ot">TRUE</span>), <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-30-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit2 &lt;-<span class="st"> </span><span class="kw">auto.arima</span>(log.MICEX, <span class="dt">ic =</span> <span class="st">&#39;aicc&#39;</span>, <span class="dt">allowdrift =</span> <span class="ot">FALSE</span>,<span class="dt">allowmean =</span> <span class="ot">TRUE</span>, <span class="dt">lambda=</span><span class="ot">NULL</span>)
+<span class="kw">plot</span>(<span class="kw">forecast</span>(fit2, <span class="dt">h=</span><span class="dv">100</span>, <span class="dt">level=</span><span class="dv">95</span>, <span class="dt">fan =</span> <span class="ot">TRUE</span>), <span class="dt">col=</span><span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-5_files/figure-slidy/unnamed-chunk-30-2.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div class="slide section level2">
+<h1>Выводы</h1>
+<ul>
+<li>Мы используем PACF для определения ориентировочного порядка AR-моделей (последний значимый лаг на PACF определяет порядок модели - <span class="math inline">\(p\)</span>)</li>
+<li>Мы используем ACF для определения порядка MA-моделей (последний значимый лаг на АСА определяет порядок модели - <span class="math inline">\(q\)</span>).</li>
+<li>Информационные критерии (AIC, BIC) часто используются для выбора оптимальной модели. Эти критерии “штрафуют” модели за сложность (количество оцениваемых параметров)</li>
+<li>ARMA модели позволяют использовать меньше параметров чем AR или MA по отдельности</li>
+<li>Все ARMA модели не позволяют моделировать меняющуюся во времени волатильность</li>
+<li>Прогнозы на основе ARMA имеет смысл строить только на несколько периодов вперед</li>
+</ul>
+</div>
+<div id="-" class="slide section level2">
+<h1>Использованные источники:</h1>
+<ol style="list-style-type: decimal">
+<li>“An Introduction to Analysis of Financial Data with R” (Ruey S. Tsay)</li>
+<li>“Statistics and Data Analysis for Financial Engineering” (David Ruppert &amp; David Matteson)</li>
+<li>Analyzing Financial Data and Implementing Financial Models Using R (Clifford Ang)</li>
+<li>Forecasting Financial Time Series (Patrick Perry)</li>
+<li>Autoregressive Moving Average ARMA(p, q) Models for Time Series Analysis (Michael Halls-Moore)</li>
+</ol>
+</div>
+
+  <!-- dynamically load mathjax for compatibility with self-contained -->
+  <script>
+    (function () {
+      var script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      document.getElementsByTagName("head")[0].appendChild(script);
+    })();
+  </script>
+
+</body>
+</html>
