@@ -4,4 +4,4 @@
 2. Введение в R
 3. [Финансовые данные](lectures/lecture-3.html)
 4. [Линейные модели финансовых серий - (AR)](lectures/lecture-4.html)
-
+5. [Линейные модели финансовых серий (MA, ARMA и ARIMA)](lectures/lecture-5.html)
