@@ -1,0 +1,8 @@
+title: Количественные финансы
+description: Салихов Марсель (marcel.salikhov@gmail.com)
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-minimal
+
+gems:
+  - jekyll-mentions
