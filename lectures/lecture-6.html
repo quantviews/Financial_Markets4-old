@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Салихов Марсель (marcel.salikhov@gmail.com)" />
-  <meta name="date" content="2017-01-15" />
+  <meta name="date" content="2017-01-16" />
   <meta name="copyright" content="НИУ ВШЭ. Салихов Марсель (marcel.salikhov@gmail.com)"/>
   <title>ARCH/GARCH модели   Количественные финансы</title>
   <style type="text/css">code{white-space: pre;}</style>
@@ -61,28 +61,29 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
   <p class="author">
 Салихов Марсель (<a href="mailto:marcel.salikhov@gmail.com">marcel.salikhov@gmail.com</a>)
   </p>
-  <p class="date">2017-01-15</p>
+  <p class="date">2017-01-16</p>
 </div>
 <div id="-" class="slide section level2">
 <h1>Цели лекции</h1>
 <ul>
 <li>понять, что такое волатильность и как ее можно оценивать</li>
 <li>понять основные принципы моделей авторегрессионной условной гетероскедастичности (ARCH)</li>
+<li>научиться тестировать “ARCH-эффект” в R</li>
 <li>научиться симулировать ARCH-модели</li>
-<li>научиться оценивать ARCH-модели на финансовых данных в R</li>
+<li>научиться оценивать ARCH-модели на финансовых данных в R c помощью пакетов fGarch и rugarch</li>
 <li>понять отличия ARCH и GARCH моделей</li>
 <li>научиться строить прогнозы для GARCH моделей</li>
 </ul>
 </div>
 <div id="--arma-" class="slide section level2">
 <h1>Выводы по ARMA-моделям</h1>
-<p>Для напоминания из прошлой лекции:</p>
+<p>Напоминание из прошлой лекции:</p>
 <ul>
 <li>Мы используем PACF для определения примерного порядка AR-моделей (последний значимый лаг на PACF определяет порядок модели - <span class="math inline">\(p\)</span>)</li>
-<li>Мы используем ACF для определения порядка MA-моделей (последний значимый лаг на АСА определяет порядок модели - <span class="math inline">\(q\)</span>).</li>
-<li>Информационные критерии (AIC, BIC) часто используются для выбора оптимальной модели. Эти критерии “штрафуют” модели за сложность (количество оцениваемых параметров)</li>
-<li>ARMA модели позволяют использовать меньше параметров чем AR или MA по отдельности</li>
-<li><strong>Все ARMA модели не позволяют моделировать меняющуюся во времени волатильность</strong>, поэтому они в принципе не могут моделировать кластеризацию волатильности. В ARMA моделях дисперсия является постоянной.</li>
+<li>Мы используем ACF для определения ориентировочного порядка MA-моделей (последний значимый лаг на АСF определяет порядок модели - <span class="math inline">\(q\)</span>).</li>
+<li>Информационные критерии (AIC, BIC) часто используются для выбора оптимальной модели ARMA. Эти критерии “штрафуют” модели за сложность (количество оцениваемых параметров)</li>
+<li>ARMA модели позволяют использовать меньше параметров, чем AR или MA по отдельности</li>
+<li><strong>Все ARMA модели не позволяют моделировать меняющуюся во времени волатильность</strong>. Поэтому они в принципе не могут моделировать кластеризацию волатильности. В ARMA моделях условная дисперсия является постоянной.</li>
 </ul>
 </div>
 <div class="slide section level2">
@@ -93,8 +94,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>Волатильность имеет широкое использование в различных приложениях:
 <ul>
 <li><strong>Ценообразование опционов</strong>. В модели Black-Scholes стоимость опционов зависит напрямую от волатильности базового актива.</li>
-<li><strong>Риск-менеджмент</strong>. Волатильность используется при расчете показателей VaR (Value at Risk), ES (Expected Shortfall), показателя Шарпа (Sharpe Ratio)</li>
-<li><strong>Торгуемые финансовые инструменты</strong>. Волатильность можно торговать напрямую (фьючерсы VIX и связанные с ними ETF), но все еще экзотика для России.</li>
+<li><strong>Риск-менеджмент</strong>. Волатильность используется при расчете показателей VaR (Value at Risk), ES (Expected Shortfall), показателя Шарпа (Sharpe Ratio) и других стандартных параметров риск-менеджмента.</li>
+<li><strong>Торгуемые финансовые инструменты</strong>. Волатильность можно торговать напрямую (к примеру, фьючерсы VIX и связанные с ними ETF), но все еще экзотика для России (на Московской Бирже торгуются фьючерcы на индексы волатильности RVI).</li>
 </ul></li>
 </ul>
 <p><strong>Итог</strong>: если мы умеем прогнозировать волатильность, то мы можем более аккуратно оценивать стоимость опционов, создавать более продвинутые системы риск-менеджмента и можем создавать стратегии для торговли волатильностью.</p>
@@ -102,9 +103,9 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="--ch" class="slide section level2">
 <h1>Условная гетероскедастичность (CH)</h1>
 <ul>
-<li>Мы говорим, что набор элементов (к примеру, части временного ряда) является <strong>гетероскедастичным</strong>, если определенные подгруппы этих элементом имеют разную дисперсию.</li>
+<li>Мы говорим, что набор элементов (к примеру, части временного ряда) является <strong>гетероскедастичным</strong>, если определенные подгруппы этих элементов имеют разную дисперсию.</li>
 </ul>
-<p>К примеру, если нестационарный временной ряд имеет выраженную сезонность или устойчивый тренд, то дисперсия ряда изменяется вместе с сезонностью или трендом. Такая регулярность приводит к гетероскедастичности ряда.</p>
+<p>К примеру, если нестационарный временной ряд имеет выраженную сезонность или устойчивый тренд, то дисперсия ряда изменяется вместе с сезонностью или трендом. Такая регулярность приводит к гетероскедастичности ряда. Почему?</p>
 <p>Однако структура рынка и поведение участников приводит к дополнительным причинам, почему увеличение дисперсии приводит к еще большему увеличению дисперсии в реальной жизни. К примеру, если большое количество участников использует стратегию “защиты” портфеля от снижения стоимости, то падение рынка приводит к автоматическим продажам и росту спросу на инструменты “защиты” (опционы) – то есть, к росту волатильности.</p>
 <ul>
 <li>Если гетероскедастичность имеет автокорреляцию, то есть <strong>условна</strong> в зависимости от периода роста волатильности, тогда наблюдается <strong>условная гетероскедастичность</strong>.</li>
@@ -115,10 +116,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Пусть мы оцениваем волатильность акций Роснефти. Мы можем оценить волатильность по разным данным: 1) дневная доходность акций за каждый торговый день 2) внутридневная динамика торгов 3) стоимость опционов на акции Роснефти (если они есть). Эти три источника дают три возможных оценки волатильности:</p>
 <ul>
 <li><strong>Волатильность как условное стандартное отклонение ежедневных доходностей</strong>. Это стандартное определение волатильности, которое мы будем использовать сегодня.</li>
-<li><strong>Подразумевая волатильность (implied volatilty)</strong>. Используя рыночные цены опционов и одну из моделей ценообразования опционов (к примеру, Black-Scholes), мы можем оценить волатильность. Однако это оценка зависит от модели, которую вы используете для определен цены опциона.</li>
+<li><strong>Подразумевая волатильность (implied volatility)</strong>. Используя рыночные цены опционов и одну из моделей ценообразования опционов (к примеру, Black-Scholes), мы можем оценить волатильность. Однако это оценка зависит от модели, которую вы используете для определения цены опциона.</li>
 <li><strong>Реализованная волатильность</strong>. Если у вас есть high frequency данные, вы можете оценивать внутридневную волатильность доходностей. К примеру, вы можете использовать, 5 минутные промежутки времени, для того, чтобы оценить дневную волатильность.</li>
 </ul>
-<p>Обычно волатильность на годовом уровне. Если вы оценили дневную волатильность, то вы можете оценить годовую волатильность, умножим ее на <span class="math inline">\(\sqrt{252}\)</span>, квадратный корень из количество торговых дней в году (примерно 16)</p>
+<p>Обычно волатильность сообщается на годовом уровне (% в год). Если вы оценили дневную волатильность, то вы можете оценить годовую волатильность, умножим ее на <span class="math inline">\(\sqrt{252}\)</span>, то есть квадратный корень из количества торговых дней в году (примерно равно 16)</p>
 </div>
 <div id="--" class="slide section level2">
 <h1>Идентификация условной гетероскедастичности</h1>
@@ -145,28 +146,30 @@ sample estimates:
 <div id="autoregressive-conditional-heteroskedastic-arch-" class="slide section level2">
 <h1>AutoRegressive Conditional Heteroskedastic (ARCH) модель</h1>
 <ul>
-<li>Мы знаем, что модели ARMA не позволяют моделировать CH-эффект, однако почему не попробовать моделировать дисперсию серии с помощью ARMA? Это и есть базовый принцип ARCH.</li>
+<li>Мы знаем, что модели ARMA не позволяют моделировать CH-эффект. Однако почему не попробовать моделировать <strong>дисперсию</strong> серии с помощью модели ARMA? Это и есть базовый принцип ARCH.</li>
 </ul>
 <p>Пусть временной ряд <span class="math inline">\({\epsilon_t}\)</span> имеет следующий вид:</p>
 <p><span class="math display">\[ \epsilon_t = \sigma_t w_t \]</span> где <span class="math inline">\(w_t\)</span> – белый шум с нулевым средним и единичной дисперсией, а часть <span class="math inline">\(\sigma_t^2\)</span> имеет вид:</p>
 <p><span class="math display">\[\sigma_t^2 = a_0 + a_1 \epsilon_{t-1}^2 \]</span> <span class="math inline">\(a_0\)</span> и <span class="math inline">\(a_1\)</span> – это параметры модели, которые необходимо оценить.</p>
 <p>В этом случае ряд <span class="math inline">\({\epsilon_t}\)</span> является процессом ARCH(1). Можно записать модель в следующем виде:</p>
-<p><span class="math display">\[\sigma_t^2 = w_t \sqrt{a_0 + a_1 \epsilon_{t-1}^2} \]</span> <span class="math inline">\(a_0 &gt;0\)</span> и <span class="math inline">\(a_1 &gt; 0\)</span> для того, чтобы часть под корнем была больше 0. <span class="math inline">\(a_1&lt;1\)</span> для того, чтобы ряд оставался стационарным с конечной дисперсией.</p>
+<p><span class="math display">\[\epsilon_t = w_t \sqrt{a_0 + a_1 \epsilon_{t-1}^2} \]</span> <span class="math inline">\(a_0 &gt;0\)</span> и <span class="math inline">\(a_1 &gt; 0\)</span> для того, чтобы часть под корнем была больше 0. <span class="math inline">\(a_0 + a_1&lt;1\)</span> для того, чтобы ряд оставался стационарным с конечной дисперсией.</p>
 </div>
 <div id="-arch--" class="slide section level2">
 <h1>Почему ARCH моделирует волатильность?</h1>
 <p>Немного математики:</p>
-<p><span class="math display">\[ Var(\epsilon_t) = E[\epsilon_t^2] - (E[\epsilon_t])^2 = E[\epsilon_t^2] =E[w_t^2]E[a_0 + a_1 \epsilon_{t-1}^2]= \]</span> <span class="math display">\[=E[a_0 + a_1 \epsilon_{t-1}^2]  = a_0 + a_1 Var(\epsilon_{t-1}) = a_0 + a_1 \epsilon_{t-1}^2 \]</span> учитывая, что среднее <span class="math inline">\(w_t\)</span> равно 0, а дисперсия – 1.</p>
+<p><span class="math display">\[ Var(\epsilon_t) = E[\epsilon_t^2] - (E[\epsilon_t])^2 = E[\epsilon_t^2] =E[w_t^2]E[a_0 + a_1 \epsilon_{t-1}^2]= \]</span> <span class="math display">\[=E[a_0 + a_1 \epsilon_{t-1}^2]  = a_0 + a_1 Var(\epsilon_{t-1}) = a_0 + a_1 \epsilon_{t-1}^2 \]</span></p>
+<p>учитывая, что среднее <span class="math inline">\(w_t\)</span> равно 0, дисперсия – 1, а $E[_t] = 0 $</p>
 <ul>
 <li><strong>Дисперсия ARCH(1) модели является AR(1)-процессом</strong>.</li>
 </ul>
 </div>
-<div id="---arch1" class="slide section level2">
-<h1>Когда можно использовать ARCH(1)?</h1>
+<div id="---arch" class="slide section level2">
+<h1>Когда можно использовать ARCH?</h1>
 <ul>
-<li>Мы использовали корелограмму доходностей для идентификации AR(1)-процесса. Точно также можно использовать корелограмму <strong>квадратов доходностей</strong> для идентификации ARCH(1)</li>
-<li>ARCH(1) необходимо использовать, если вы уже подобрали адекватную модель, которая “оставляет” после себя остатки, более или менее похожие на белый шум. То есть, сначала необходимо определить модель для среднего доходностей.</li>
-<li>ARCH(1) не имеет смысла использовать для серий, которые имеют сезонные и/или трендовые эффекты. Сначала “уберите” сезонность/тренд с помощью ARIMA (SARIMA), а после этого оценивайте ARCH.</li>
+<li>Мы использовали корелограмму доходностей для идентификации AR(1)-процесса. Точно также можно использовать корелограмму <strong>квадратов доходностей</strong> для идентификации ARCH</li>
+<li>ARCH необходимо использовать, если вы уже подобрали адекватную модель, которая “оставляет” после себя остатки, более или менее похожие на белый шум. То есть, сначала необходимо определить модель для среднего доходностей, а потом моделировать дисперсию.<br />
+</li>
+<li>ARCH не имеет смысла использовать для серий, которые имеют сезонные и/или трендовые эффекты. Сначала “уберите” сезонность/тренд с помощью ARIMA (SARIMA), экзогенных регрессоров, а после этого оценивайте ARCH.</li>
 </ul>
 </div>
 <div id="---arch" class="slide section level2">
@@ -178,10 +181,11 @@ sample estimates:
 </ol>
 <p>Недостатки:</p>
 <ol style="list-style-type: decimal">
-<li>Модель трактует положительные и отрицательные шоки одинаковым образом с точки зрения влияния на волатильность. Эмпирические наблюдения и здравый смысл говорят нам, что эти шоки – различны.</li>
+<li>Модель трактует положительные и отрицательные шоки одинаковым образом с точки зрения влияния на волатильность. Эмпирические наблюдения и здравый смысл говорят, что эти шоки различны.</li>
 <li>Модель ARCH накладывает достаточно сильные ограничения на значения коэффициентов модели. Это ограничивает возможности моделировать более высокие моменты (к примеру, избыточный эксцесс).</li>
 <li>Модель ARCH не дает возможность оценки источников шоков, это просто механистический способ оценки поведения условной дисперсии.</li>
 <li>Модель ARCH недооценивает волатильность, так как достаточно медленно реагирует на большие по значению шоки.</li>
+<li>Модель на фактических требует достаточно большого количество параметров для оценки, что увеличивает вероятность overfitting.</li>
 </ol>
 </div>
 <div id="archp" class="slide section level2">
@@ -193,13 +197,13 @@ sample estimates:
 </ul>
 </div>
 <div id="-arch-" class="slide section level2">
-<h1>Тестирования ARCH-эффекта</h1>
-<p>Пусть уравнение для среднего выглядит следующим образом: <span class="math inline">\(a_t = r_t + \mu_t\)</span>. Мы можем использовать квадраты остатков (<span class="math inline">\(a_t^2\)</span>), чтобы проверить серию на условную гетерокседастичность (ARCH-эффект). Есть два варианта теста:</p>
+<h1>Тестирование ARCH-эффекта</h1>
+<p>Пусть уравнение для среднего выглядит следующим образом: <span class="math inline">\(a_t = r + \mu_t\)</span>. Мы можем использовать квадраты остатков (<span class="math inline">\(a_t^2\)</span>), чтобы проверить серию на условную гетерокседастичность (ARCH-эффект). Есть два варианта тестирования ARCH-эффекта:</p>
 <ol style="list-style-type: decimal">
-<li>Использовать тест Льюнга-Бокса (Ljung-Box test) для серии <span class="math inline">\(\{a_t^2\}\)</span> - мы проходили этот тест в ARMA-моделях</li>
+<li>Использовать тест Льюнга-Бокса (Ljung-Box test) для серии <span class="math inline">\(\{a_t^2\}\)</span> – мы проходили этот тест в ARMA-моделях</li>
 <li>Использовать тест множителей Лагранжа (см <em>Engle (1982)</em>). Этот тест эквивалентен обычному F-тесту на тестирование гипотезы (<span class="math inline">\(\alpha_i = 0\)</span>) в уравнении:</li>
 </ol>
-<p><span class="math display">\[ a_t^2 = \alpha _0 + \alpha_1 a_{t-1}^2 + ... + a_m \alpha{t-m}^2 + e_t, t = m +1, ..., T \]</span> Код теста для R:</p>
+<p><span class="math display">\[ a_t^2 = \alpha _0 + \alpha_1 a_{t-1}^2 +\ldots + a_m \alpha{t-m}^2 + e_t, t = m +1, ..., T \]</span> Код теста LM для R:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="st">&quot;archTest&quot;</span> &lt;-<span class="st"> </span>function(rtn,<span class="dt">m=</span><span class="dv">10</span>){
 <span class="co">#  Провести тест множителей Лагранжа для оценки ARCH-эффекта в ряде </span>
 <span class="co"># rtn: серия доходностей</span>
@@ -262,24 +266,29 @@ F-statistic:   144 on 12 and 3974 DF,  p-value: &lt; 2.2e-16</code></pre>
 <ul>
 <li>Мы можем использовать PACF квадратов доходностей, чтобы оценить порядок ARCH модели.</li>
 </ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(y^<span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Можем оценить ARMA(1,1) модель для среднего доходностей и посмотреть на квадраты остатков этой модели:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">arma11 &lt;-<span class="st"> </span><span class="kw">Arima</span>(MICEX.rtn, <span class="dt">order=</span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>))
 <span class="kw">Pacf</span>(<span class="kw">resid</span>(arma11)^<span class="dv">2</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-5-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <p>Как видно, требуется достаточно много лагов (порядок модели), чтобы использовать ARCH.</p>
 </div>
 <div id="-ar1-arch1" class="slide section level2">
 <h1>Симулирование AR(1) + ARCH(1)</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">n =<span class="st"> </span><span class="dv">10200</span>
+<p>AR(1) модель для среднего и ARCH(1) для дисперсии можно симулировать следующим образом:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">n =<span class="st"> </span><span class="dv">10200</span> <span class="co">#</span>
 e =<span class="st"> </span><span class="kw">rnorm</span>(n)
-a =<span class="st"> </span>e
-y =<span class="st"> </span>e
-sig2 =<span class="st"> </span>e^<span class="dv">2</span>
+a =<span class="st"> </span>e <span class="co"># ARCH</span>
+y =<span class="st"> </span>e <span class="co"># AR + ARCH</span>
+sig2 =<span class="st"> </span>e^<span class="dv">2</span> <span class="co"># условная дисперсия</span>
+<span class="co"># параметры для ARCH</span>
 omega =<span class="st"> </span><span class="dv">1</span>
 alpha =<span class="st"> </span><span class="fl">0.55</span>
 <span class="co">#параметры для AR</span>
 phi =<span class="st"> </span><span class="fl">0.8</span>
 mu =<span class="st"> </span><span class="fl">0.1</span>
-omega/(<span class="dv">1</span>-alpha) <span class="co"># unconditional st dev</span></code></pre></div>
+omega/(<span class="dv">1</span>-alpha) <span class="co"># безусловное ст. отклонение</span></code></pre></div>
 <pre><code>[1] 2.222222</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sqrt</span>(omega/(<span class="dv">1</span>-alpha))</code></pre></div>
 <pre><code>[1] 1.490712</code></pre>
@@ -287,8 +296,8 @@ omega/(<span class="dv">1</span>-alpha) <span class="co"># unconditional st dev<
 for (t in <span class="dv">2</span>:n)
 {
   a[t] =<span class="st"> </span><span class="kw">sqrt</span>(sig2[t])*e[t]
-  y[t] =<span class="st"> </span>mu +<span class="st"> </span>phi*(y[t<span class="dv">-1</span>]-mu) +<span class="st"> </span>a[t]
-  sig2[t<span class="dv">+1</span>] =<span class="st"> </span>omega +<span class="st"> </span>alpha *<span class="st"> </span>a[t]^<span class="dv">2</span>
+  y[t] =<span class="st"> </span>mu +<span class="st"> </span>phi*(y[t<span class="dv">-1</span>]-mu) +<span class="st"> </span>a[t] <span class="co"># моделирование AR</span>
+  sig2[t<span class="dv">+1</span>] =<span class="st"> </span>omega +<span class="st"> </span>alpha *<span class="st"> </span>a[t]^<span class="dv">2</span> <span class="co"># моделирование ARCH</span>
 }
 
 <span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">2</span>,<span class="dv">4</span>))
@@ -301,12 +310,12 @@ for (t in <span class="dv">2</span>:n)
 <span class="kw">acf</span>(a[<span class="dv">10001</span>:n]^<span class="dv">2</span>,<span class="dt">main=</span><span class="st">&quot;(f) ARCH squared&quot;</span>)
 <span class="kw">acf</span>(y[<span class="dv">10001</span>:n],<span class="dt">main=</span><span class="st">&quot;(g) AR+ARCH&quot;</span>)
 <span class="kw">acf</span>(y[<span class="dv">10001</span>:n]^<span class="dv">2</span>,<span class="dt">main=</span><span class="st">&quot;(h) AR+ARCH squared&quot;</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-5-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-6-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>))</code></pre></div>
 </div>
 <div id="-arch-" class="slide section level2">
 <h1>Оценка ARCH-модели</h1>
-<p>Оценим ARCH(1)-модель для доходностей ММВБ при допущении о том, что среднее доходностей является константой с помощью функции <code>garchFit</code> из пакета <code>fGarch</code>.</p>
+<p>Оценим ARCH(1)-модель для доходностей ММВБ при допущении о том, что среднее доходностей является константой. Используем помощью функцию <code>garchFit</code> из пакета <code>fGarch</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(fGarch)
 arch1 &lt;-<span class="st"> </span><span class="kw">garchFit</span>(~<span class="dv">1</span>+<span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">0</span>),<span class="dt">data=</span>MICEX.rtn,<span class="dt">trace=</span>F)
 <span class="kw">summary</span>(arch1)</code></pre></div>
@@ -319,7 +328,7 @@ Call:
 
 Mean and Variance Equation:
  data ~ 1 + garch(1, 0)
-&lt;environment: 0x0000000019e27870&gt;
+&lt;environment: 0x0000000011b65dd0&gt;
  [data = MICEX.rtn]
 
 Conditional Distribution:
@@ -344,7 +353,7 @@ Log Likelihood:
  10174.52    normalized:  2.544267 
 
 Description:
- Sun Jan 15 19:35:16 2017 by user: Marcel 
+ Mon Jan 16 10:52:36 2017 by user: m_salihov 
 
 
 Standardised Residuals Tests:
@@ -362,14 +371,19 @@ Standardised Residuals Tests:
 Information Criterion Statistics:
       AIC       BIC       SIC      HQIC 
 -5.087033 -5.082312 -5.087034 -5.085360 </code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">res  &lt;-<span class="st"> </span><span class="kw">residuals</span>(arch1,<span class="dt">standardize=</span>T) <span class="co"># используем стандартизированные остатки</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">res  &lt;-<span class="st"> </span><span class="kw">residuals</span>(arch1,<span class="dt">standardize=</span>T) <span class="co"># используем стандартизированные остатки для диагностики модели </span>
 <span class="kw">Acf</span>(res,<span class="dt">lag=</span><span class="dv">20</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-6-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-7-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(res,<span class="dt">lag=</span><span class="dv">20</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-6-2.png" width="1152" style="display: block; margin: auto;" /></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot(arch1) диагностические графики для модели </span></code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-7-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># plot(arch1) диагностические графики для модели </span>
+<span class="kw">plot</span>(arch1, <span class="dt">which =</span> <span class="dv">13</span>) <span class="co"># QQ-Plot of Standardized Residuals   </span></code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-7-3.png" width="1152" style="display: block; margin: auto;" /></p>
 <p>Оцененная модель имеет вид:</p>
 <p><span class="math display">\[ r_t = 0.001197 + a_t, \sigma^2 = 0.0002589 + 0.455 a_{t-1}^2 \]</span> Все коэффициенты являются значимыми. ACF и PACF указывают на отсутствие автокорреляции в остатках</p>
+</div>
+<div id="-arch1-c----" class="slide section level2">
+<h1>Оценка ARCH(1) c распределением Стьюдента для шоков</h1>
 <p>Та же самая модель с t-распределением Стьюдента для моделирования шоков серии.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">arch1_student &lt;-<span class="st"> </span><span class="kw">garchFit</span>(~<span class="dv">1</span>+<span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">0</span>),<span class="dt">data=</span>MICEX.rtn,<span class="dt">trace=</span>F, <span class="dt">cond.dist=</span><span class="st">&quot;std&quot;</span>)
 <span class="kw">summary</span>(arch1_student)</code></pre></div>
@@ -383,7 +397,7 @@ Call:
 
 Mean and Variance Equation:
  data ~ 1 + garch(1, 0)
-&lt;environment: 0x0000000018e29ff0&gt;
+&lt;environment: 0x0000000011f240c8&gt;
  [data = MICEX.rtn]
 
 Conditional Distribution:
@@ -391,7 +405,7 @@ Conditional Distribution:
 
 Coefficient(s):
         mu       omega      alpha1       shape  
-0.00134266  0.00029045  0.35420473  3.49328674  
+0.00134266  0.00029045  0.35420473  3.49328676  
 
 Std. Errors:
  based on Hessian 
@@ -409,7 +423,7 @@ Log Likelihood:
  10581.63    normalized:  2.64607 
 
 Description:
- Sun Jan 15 19:35:17 2017 by user: Marcel 
+ Mon Jan 16 10:52:38 2017 by user: m_salihov 
 
 
 Standardised Residuals Tests:
@@ -429,10 +443,12 @@ Information Criterion Statistics:
 -5.290140 -5.283844 -5.290142 -5.287908 </code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">res  &lt;-<span class="st"> </span><span class="kw">residuals</span>(arch1_student,<span class="dt">standardize=</span>T) <span class="co"># используем стандартизированные остатки</span>
 <span class="kw">Acf</span>(res,<span class="dt">lag=</span><span class="dv">20</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-7-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-8-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(res,<span class="dt">lag=</span><span class="dv">20</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-7-2.png" width="1152" style="display: block; margin: auto;" /></p>
-<p>Использование распределения с более “тяжелыми хвостами” несколько уменьшило ARCH-коэффициента.</p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-8-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(arch1_student, <span class="dt">which =</span> <span class="dv">13</span>) <span class="co"># QQ-Plot of Standardized Residuals   </span></code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-8-3.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Использование распределения с более “тяжелыми хвостами” несколько уменьшило значение ARCH-коэффициента. График квантиль-квантиль также подтверждает, что использование распределения Стьюдента для шоков, приводит к более “нормальным” остаткам модели</p>
 </div>
 <div id="-garch" class="slide section level2">
 <h1>Определение GARCH</h1>
@@ -444,7 +460,7 @@ Information Criterion Statistics:
 <p>где <span class="math inline">\(w_t\)</span> – белый шум с нулевым средним и единичной дисперсией, а часть <span class="math inline">\(\sigma_t^2\)</span> имеет вид:</p>
 <p><span class="math display">\[\sigma_t^2 = a_0 +\sum_{i=1}^{q} a_i \epsilon_{t-i}^2+ \sum_{j=1}^{p} \beta_i \sigma_{t-j}^2  \]</span> где <span class="math inline">\(\alpha_i\)</span> и <span class="math inline">\(\beta_j\)</span> – это параметры модели.</p>
 <ul>
-<li>GARCH – это ARMA эквивалент для дисперсии серии.</li>
+<li><strong>GARCH – это ARMA-процесс для дисперсии серии</strong>.</li>
 </ul>
 </div>
 <div id="-garch11" class="slide section level2">
@@ -460,26 +476,62 @@ sigsq &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv"
 for (i in <span class="dv">2</span>:<span class="dv">10000</span>) {
    sigsq[i] &lt;-<span class="st"> </span>a0 +<span class="st"> </span>a1 *<span class="st"> </span>(eps[i<span class="dv">-1</span>]^<span class="dv">2</span>) +<span class="st"> </span>b1 *<span class="st"> </span>sigsq[i<span class="dv">-1</span>]
    eps[i] &lt;-<span class="st"> </span>w[i]*<span class="kw">sqrt</span>(sigsq[i])
-  }</code></pre></div>
+}
+
+<span class="kw">plot</span>(eps, <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)</code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-9-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <ul>
 <li>построим корелограмму получившегося ряда</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(eps)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-9-1.png" width="1152" style="display: block; margin: auto;" /></p>
-<p>вроде бы ничего необычного. Но если мы построим корелограмму квадратов рядов, то увидим выраженное убывание на последующих лагах</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(eps^<span class="dv">2</span>)</code></pre></div>
 <p><img src="lecture-6_files/figure-slidy/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>вроде бы ничего необычного. Но если мы построим корелограмму квадратов рядов, то увидим выраженное убывание на последующих лагах (характеристика AR-процесса)</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Acf</span>(eps^<span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(eps^<span class="dv">2</span>)</code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-11-2.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="--garch11-" class="slide section level2">
 <h1>Оценка симулированной GARCH(1,1)-модели</h1>
-<p>Мы будем использовать функцию <code>garch</code> из пакета <code>tseries</code></p>
+<p>Мы можем также использовать функцию <code>garch</code> из пакета <code>tseries</code></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tseries)
 eps.garch &lt;-<span class="st"> </span><span class="kw">garch</span>(eps, <span class="dt">trace=</span><span class="ot">FALSE</span>)
-<span class="kw">confint</span>(eps.garch)</code></pre></div>
-<pre><code>          2.5 %      97.5 %
-a0  0.744012789 0.813029721
-a1  0.185495966 0.216790735
-b1 -0.005416026 0.005416026</code></pre>
+<span class="kw">summary</span>(eps.garch)</code></pre></div>
+<pre><code>
+Call:
+garch(x = eps, trace = FALSE)
+
+Model:
+GARCH(1,1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-4.11672 -0.66558  0.01997  0.68409  3.53687 
+
+Coefficient(s):
+    Estimate  Std. Error  t value Pr(&gt;|t|)    
+a0  0.197947    0.009858    20.08   &lt;2e-16 ***
+a1  0.465840    0.019720    23.62   &lt;2e-16 ***
+b1  0.323213    0.018907    17.09   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Diagnostic Tests:
+    Jarque Bera Test
+
+data:  Residuals
+X-squared = 0.40598, df = 2, p-value = 0.8163
+
+
+    Box-Ljung test
+
+data:  Squared.Residuals
+X-squared = 0.49885, df = 1, p-value = 0.48</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">confint</span>(eps.garch)</code></pre></div>
+<pre><code>       2.5 %    97.5 %
+a0 0.1786255 0.2172683
+a1 0.4271900 0.5044903
+b1 0.2861566 0.3602687</code></pre>
 <ul>
 <li>Коэффициенты отличаются значимым образом от 0.</li>
 <li>Доверительные интервалы включат “настоящие” значения коэффициентов</li>
@@ -487,8 +539,9 @@ b1 -0.005416026 0.005416026</code></pre>
 </div>
 <div id="-garch11---" class="slide section level2">
 <h1>Оценка GARCH(1,1) для индекса ММВБ</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(tseries)
-garch11 &lt;-<span class="st"> </span><span class="kw">garchFit</span>(~<span class="dv">1</span>+<span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">1</span>),<span class="dt">data=</span>MICEX.rtn,<span class="dt">trace=</span>F)
+<p>Оценим GARCH(1,1) при допущении о том, что среднее доходностей является константой:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(fGarch)
+garch11 &lt;-<span class="st"> </span><span class="kw">garchFit</span>(~<span class="dv">1</span>+<span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">1</span>),<span class="dt">data=</span>MICEX.rtn,<span class="dt">trace=</span>F) <span class="co"># часть ~1 говорит о том, что надо оценивать константу</span>
 <span class="kw">summary</span>(garch11)</code></pre></div>
 <pre><code>
 Title:
@@ -499,7 +552,7 @@ Call:
 
 Mean and Variance Equation:
  data ~ 1 + garch(1, 1)
-&lt;environment: 0x00000000199820a0&gt;
+&lt;environment: 0x00000000157ab880&gt;
  [data = MICEX.rtn]
 
 Conditional Distribution:
@@ -507,7 +560,7 @@ Conditional Distribution:
 
 Coefficient(s):
         mu       omega      alpha1       beta1  
-1.0817e-03  7.4051e-06  1.0176e-01  8.7826e-01  
+1.0817e-03  7.4052e-06  1.0177e-01  8.7826e-01  
 
 Std. Errors:
  based on Hessian 
@@ -516,8 +569,8 @@ Error Analysis:
         Estimate  Std. Error  t value Pr(&gt;|t|)    
 mu     1.082e-03   2.289e-04    4.727 2.28e-06 ***
 omega  7.405e-06   1.218e-06    6.081 1.19e-09 ***
-alpha1 1.018e-01   1.021e-02    9.962  &lt; 2e-16 ***
-beta1  8.783e-01   1.141e-02   76.986  &lt; 2e-16 ***
+alpha1 1.018e-01   1.022e-02    9.962  &lt; 2e-16 ***
+beta1  8.783e-01   1.141e-02   76.985  &lt; 2e-16 ***
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 
@@ -525,841 +578,41 @@ Log Likelihood:
  10737.09    normalized:  2.684945 
 
 Description:
- Sun Jan 15 19:35:18 2017 by user: Marcel 
+ Mon Jan 16 10:52:40 2017 by user: m_salihov 
 
 
 Standardised Residuals Tests:
                                 Statistic p-Value  
- Jarque-Bera Test   R    Chi^2  3767.382  0        
+ Jarque-Bera Test   R    Chi^2  3767.372  0        
  Shapiro-Wilk Test  R    W      0.9722081 0        
- Ljung-Box Test     R    Q(10)  10.84526  0.3697003
- Ljung-Box Test     R    Q(15)  12.24439  0.6604442
- Ljung-Box Test     R    Q(20)  15.78142  0.7300884
- Ljung-Box Test     R^2  Q(10)  5.88271   0.8250193
- Ljung-Box Test     R^2  Q(15)  7.901586  0.9276675
- Ljung-Box Test     R^2  Q(20)  10.08477  0.9666087
- LM Arch Test       R    TR^2   6.179823  0.9067471
+ Ljung-Box Test     R    Q(10)  10.84527  0.3696994
+ Ljung-Box Test     R    Q(15)  12.24441  0.6604426
+ Ljung-Box Test     R    Q(20)  15.78145  0.7300867
+ Ljung-Box Test     R^2  Q(10)  5.882662  0.8250232
+ Ljung-Box Test     R^2  Q(15)  7.901537  0.9276694
+ Ljung-Box Test     R^2  Q(20)  10.08472  0.9666096
+ LM Arch Test       R    TR^2   6.179772  0.9067498
 
 Information Criterion Statistics:
       AIC       BIC       SIC      HQIC 
 -5.367889 -5.361594 -5.367891 -5.365657 </code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">coef</span>(garch11)</code></pre></div>
 <pre><code>          mu        omega       alpha1        beta1 
-1.081730e-03 7.405122e-06 1.017647e-01 8.782637e-01 </code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">v11=<span class="kw">volatility</span>(garch11)
-<span class="kw">index</span>(MICEX.rtn)</code></pre></div>
-<pre><code>   [1] &quot;2001-01-04&quot; &quot;2001-01-05&quot; &quot;2001-01-09&quot; &quot;2001-01-10&quot; &quot;2001-01-11&quot;
-   [6] &quot;2001-01-12&quot; &quot;2001-01-15&quot; &quot;2001-01-16&quot; &quot;2001-01-17&quot; &quot;2001-01-18&quot;
-  [11] &quot;2001-01-19&quot; &quot;2001-01-22&quot; &quot;2001-01-23&quot; &quot;2001-01-24&quot; &quot;2001-01-25&quot;
-  [16] &quot;2001-01-26&quot; &quot;2001-01-29&quot; &quot;2001-01-30&quot; &quot;2001-01-31&quot; &quot;2001-02-01&quot;
-  [21] &quot;2001-02-02&quot; &quot;2001-02-05&quot; &quot;2001-02-06&quot; &quot;2001-02-07&quot; &quot;2001-02-08&quot;
-  [26] &quot;2001-02-09&quot; &quot;2001-02-12&quot; &quot;2001-02-13&quot; &quot;2001-02-14&quot; &quot;2001-02-15&quot;
-  [31] &quot;2001-02-16&quot; &quot;2001-02-19&quot; &quot;2001-02-20&quot; &quot;2001-02-21&quot; &quot;2001-02-22&quot;
-  [36] &quot;2001-02-23&quot; &quot;2001-02-26&quot; &quot;2001-02-27&quot; &quot;2001-02-28&quot; &quot;2001-03-01&quot;
-  [41] &quot;2001-03-02&quot; &quot;2001-03-05&quot; &quot;2001-03-06&quot; &quot;2001-03-07&quot; &quot;2001-03-11&quot;
-  [46] &quot;2001-03-12&quot; &quot;2001-03-13&quot; &quot;2001-03-14&quot; &quot;2001-03-15&quot; &quot;2001-03-16&quot;
-  [51] &quot;2001-03-19&quot; &quot;2001-03-20&quot; &quot;2001-03-21&quot; &quot;2001-03-22&quot; &quot;2001-03-23&quot;
-  [56] &quot;2001-03-26&quot; &quot;2001-03-27&quot; &quot;2001-03-28&quot; &quot;2001-03-29&quot; &quot;2001-03-30&quot;
-  [61] &quot;2001-04-02&quot; &quot;2001-04-03&quot; &quot;2001-04-04&quot; &quot;2001-04-05&quot; &quot;2001-04-06&quot;
-  [66] &quot;2001-04-09&quot; &quot;2001-04-10&quot; &quot;2001-04-11&quot; &quot;2001-04-12&quot; &quot;2001-04-13&quot;
-  [71] &quot;2001-04-16&quot; &quot;2001-04-17&quot; &quot;2001-04-18&quot; &quot;2001-04-19&quot; &quot;2001-04-20&quot;
-  [76] &quot;2001-04-23&quot; &quot;2001-04-24&quot; &quot;2001-04-25&quot; &quot;2001-04-26&quot; &quot;2001-04-27&quot;
-  [81] &quot;2001-04-28&quot; &quot;2001-05-03&quot; &quot;2001-05-04&quot; &quot;2001-05-07&quot; &quot;2001-05-08&quot;
-  [86] &quot;2001-05-10&quot; &quot;2001-05-11&quot; &quot;2001-05-14&quot; &quot;2001-05-15&quot; &quot;2001-05-16&quot;
-  [91] &quot;2001-05-17&quot; &quot;2001-05-18&quot; &quot;2001-05-21&quot; &quot;2001-05-22&quot; &quot;2001-05-23&quot;
-  [96] &quot;2001-05-24&quot; &quot;2001-05-25&quot; &quot;2001-05-28&quot; &quot;2001-05-29&quot; &quot;2001-05-30&quot;
- [101] &quot;2001-05-31&quot; &quot;2001-06-01&quot; &quot;2001-06-04&quot; &quot;2001-06-05&quot; &quot;2001-06-06&quot;
- [106] &quot;2001-06-07&quot; &quot;2001-06-08&quot; &quot;2001-06-09&quot; &quot;2001-06-13&quot; &quot;2001-06-14&quot;
- [111] &quot;2001-06-15&quot; &quot;2001-06-18&quot; &quot;2001-06-19&quot; &quot;2001-06-20&quot; &quot;2001-06-21&quot;
- [116] &quot;2001-06-22&quot; &quot;2001-06-25&quot; &quot;2001-06-26&quot; &quot;2001-06-27&quot; &quot;2001-06-28&quot;
- [121] &quot;2001-06-29&quot; &quot;2001-07-02&quot; &quot;2001-07-03&quot; &quot;2001-07-04&quot; &quot;2001-07-05&quot;
- [126] &quot;2001-07-06&quot; &quot;2001-07-09&quot; &quot;2001-07-10&quot; &quot;2001-07-11&quot; &quot;2001-07-12&quot;
- [131] &quot;2001-07-13&quot; &quot;2001-07-16&quot; &quot;2001-07-17&quot; &quot;2001-07-18&quot; &quot;2001-07-19&quot;
- [136] &quot;2001-07-20&quot; &quot;2001-07-23&quot; &quot;2001-07-24&quot; &quot;2001-07-25&quot; &quot;2001-07-26&quot;
- [141] &quot;2001-07-27&quot; &quot;2001-07-30&quot; &quot;2001-07-31&quot; &quot;2001-08-01&quot; &quot;2001-08-02&quot;
- [146] &quot;2001-08-03&quot; &quot;2001-08-06&quot; &quot;2001-08-07&quot; &quot;2001-08-08&quot; &quot;2001-08-09&quot;
- [151] &quot;2001-08-10&quot; &quot;2001-08-13&quot; &quot;2001-08-14&quot; &quot;2001-08-15&quot; &quot;2001-08-16&quot;
- [156] &quot;2001-08-17&quot; &quot;2001-08-20&quot; &quot;2001-08-21&quot; &quot;2001-08-22&quot; &quot;2001-08-23&quot;
- [161] &quot;2001-08-24&quot; &quot;2001-08-27&quot; &quot;2001-08-28&quot; &quot;2001-08-29&quot; &quot;2001-08-30&quot;
- [166] &quot;2001-08-31&quot; &quot;2001-09-03&quot; &quot;2001-09-04&quot; &quot;2001-09-05&quot; &quot;2001-09-06&quot;
- [171] &quot;2001-09-07&quot; &quot;2001-09-10&quot; &quot;2001-09-11&quot; &quot;2001-09-12&quot; &quot;2001-09-13&quot;
- [176] &quot;2001-09-14&quot; &quot;2001-09-17&quot; &quot;2001-09-18&quot; &quot;2001-09-19&quot; &quot;2001-09-20&quot;
- [181] &quot;2001-09-21&quot; &quot;2001-09-24&quot; &quot;2001-09-25&quot; &quot;2001-09-26&quot; &quot;2001-09-27&quot;
- [186] &quot;2001-09-28&quot; &quot;2001-10-01&quot; &quot;2001-10-02&quot; &quot;2001-10-03&quot; &quot;2001-10-04&quot;
- [191] &quot;2001-10-05&quot; &quot;2001-10-08&quot; &quot;2001-10-09&quot; &quot;2001-10-10&quot; &quot;2001-10-11&quot;
- [196] &quot;2001-10-12&quot; &quot;2001-10-15&quot; &quot;2001-10-16&quot; &quot;2001-10-17&quot; &quot;2001-10-18&quot;
- [201] &quot;2001-10-19&quot; &quot;2001-10-22&quot; &quot;2001-10-23&quot; &quot;2001-10-24&quot; &quot;2001-10-25&quot;
- [206] &quot;2001-10-26&quot; &quot;2001-10-29&quot; &quot;2001-10-30&quot; &quot;2001-10-31&quot; &quot;2001-11-01&quot;
- [211] &quot;2001-11-02&quot; &quot;2001-11-05&quot; &quot;2001-11-06&quot; &quot;2001-11-08&quot; &quot;2001-11-09&quot;
- [216] &quot;2001-11-12&quot; &quot;2001-11-13&quot; &quot;2001-11-14&quot; &quot;2001-11-15&quot; &quot;2001-11-16&quot;
- [221] &quot;2001-11-19&quot; &quot;2001-11-20&quot; &quot;2001-11-21&quot; &quot;2001-11-22&quot; &quot;2001-11-23&quot;
- [226] &quot;2001-11-26&quot; &quot;2001-11-27&quot; &quot;2001-11-28&quot; &quot;2001-11-29&quot; &quot;2001-11-30&quot;
- [231] &quot;2001-12-03&quot; &quot;2001-12-04&quot; &quot;2001-12-05&quot; &quot;2001-12-06&quot; &quot;2001-12-07&quot;
- [236] &quot;2001-12-10&quot; &quot;2001-12-11&quot; &quot;2001-12-13&quot; &quot;2001-12-14&quot; &quot;2001-12-17&quot;
- [241] &quot;2001-12-18&quot; &quot;2001-12-19&quot; &quot;2001-12-20&quot; &quot;2001-12-21&quot; &quot;2001-12-24&quot;
- [246] &quot;2001-12-25&quot; &quot;2001-12-26&quot; &quot;2001-12-27&quot; &quot;2001-12-28&quot; &quot;2001-12-29&quot;
- [251] &quot;2002-01-03&quot; &quot;2002-01-04&quot; &quot;2002-01-08&quot; &quot;2002-01-09&quot; &quot;2002-01-10&quot;
- [256] &quot;2002-01-11&quot; &quot;2002-01-14&quot; &quot;2002-01-15&quot; &quot;2002-01-16&quot; &quot;2002-01-17&quot;
- [261] &quot;2002-01-18&quot; &quot;2002-01-21&quot; &quot;2002-01-22&quot; &quot;2002-01-23&quot; &quot;2002-01-24&quot;
- [266] &quot;2002-01-25&quot; &quot;2002-01-28&quot; &quot;2002-01-29&quot; &quot;2002-01-30&quot; &quot;2002-01-31&quot;
- [271] &quot;2002-02-01&quot; &quot;2002-02-04&quot; &quot;2002-02-05&quot; &quot;2002-02-06&quot; &quot;2002-02-07&quot;
- [276] &quot;2002-02-08&quot; &quot;2002-02-11&quot; &quot;2002-02-12&quot; &quot;2002-02-13&quot; &quot;2002-02-14&quot;
- [281] &quot;2002-02-15&quot; &quot;2002-02-18&quot; &quot;2002-02-19&quot; &quot;2002-02-20&quot; &quot;2002-02-21&quot;
- [286] &quot;2002-02-22&quot; &quot;2002-02-26&quot; &quot;2002-02-27&quot; &quot;2002-02-28&quot; &quot;2002-03-01&quot;
- [291] &quot;2002-03-04&quot; &quot;2002-03-05&quot; &quot;2002-03-06&quot; &quot;2002-03-07&quot; &quot;2002-03-11&quot;
- [296] &quot;2002-03-12&quot; &quot;2002-03-13&quot; &quot;2002-03-14&quot; &quot;2002-03-15&quot; &quot;2002-03-18&quot;
- [301] &quot;2002-03-19&quot; &quot;2002-03-20&quot; &quot;2002-03-21&quot; &quot;2002-03-22&quot; &quot;2002-03-25&quot;
- [306] &quot;2002-03-26&quot; &quot;2002-03-27&quot; &quot;2002-03-28&quot; &quot;2002-03-29&quot; &quot;2002-04-01&quot;
- [311] &quot;2002-04-02&quot; &quot;2002-04-03&quot; &quot;2002-04-04&quot; &quot;2002-04-05&quot; &quot;2002-04-08&quot;
- [316] &quot;2002-04-09&quot; &quot;2002-04-10&quot; &quot;2002-04-11&quot; &quot;2002-04-12&quot; &quot;2002-04-15&quot;
- [321] &quot;2002-04-16&quot; &quot;2002-04-17&quot; &quot;2002-04-18&quot; &quot;2002-04-19&quot; &quot;2002-04-22&quot;
- [326] &quot;2002-04-23&quot; &quot;2002-04-24&quot; &quot;2002-04-25&quot; &quot;2002-04-26&quot; &quot;2002-04-27&quot;
- [331] &quot;2002-04-29&quot; &quot;2002-04-30&quot; &quot;2002-05-06&quot; &quot;2002-05-07&quot; &quot;2002-05-08&quot;
- [336] &quot;2002-05-13&quot; &quot;2002-05-14&quot; &quot;2002-05-15&quot; &quot;2002-05-16&quot; &quot;2002-05-17&quot;
- [341] &quot;2002-05-18&quot; &quot;2002-05-20&quot; &quot;2002-05-21&quot; &quot;2002-05-22&quot; &quot;2002-05-23&quot;
- [346] &quot;2002-05-24&quot; &quot;2002-05-27&quot; &quot;2002-05-29&quot; &quot;2002-05-30&quot; &quot;2002-05-31&quot;
- [351] &quot;2002-06-03&quot; &quot;2002-06-04&quot; &quot;2002-06-05&quot; &quot;2002-06-06&quot; &quot;2002-06-07&quot;
- [356] &quot;2002-06-10&quot; &quot;2002-06-11&quot; &quot;2002-06-13&quot; &quot;2002-06-14&quot; &quot;2002-06-17&quot;
- [361] &quot;2002-06-18&quot; &quot;2002-06-19&quot; &quot;2002-06-20&quot; &quot;2002-06-21&quot; &quot;2002-06-24&quot;
- [366] &quot;2002-06-25&quot; &quot;2002-06-26&quot; &quot;2002-06-27&quot; &quot;2002-06-28&quot; &quot;2002-07-01&quot;
- [371] &quot;2002-07-02&quot; &quot;2002-07-03&quot; &quot;2002-07-04&quot; &quot;2002-07-05&quot; &quot;2002-07-08&quot;
- [376] &quot;2002-07-09&quot; &quot;2002-07-10&quot; &quot;2002-07-11&quot; &quot;2002-07-12&quot; &quot;2002-07-15&quot;
- [381] &quot;2002-07-16&quot; &quot;2002-07-17&quot; &quot;2002-07-18&quot; &quot;2002-07-19&quot; &quot;2002-07-22&quot;
- [386] &quot;2002-07-23&quot; &quot;2002-07-24&quot; &quot;2002-07-25&quot; &quot;2002-07-26&quot; &quot;2002-07-29&quot;
- [391] &quot;2002-07-30&quot; &quot;2002-07-31&quot; &quot;2002-08-01&quot; &quot;2002-08-02&quot; &quot;2002-08-05&quot;
- [396] &quot;2002-08-06&quot; &quot;2002-08-07&quot; &quot;2002-08-08&quot; &quot;2002-08-09&quot; &quot;2002-08-12&quot;
- [401] &quot;2002-08-13&quot; &quot;2002-08-14&quot; &quot;2002-08-15&quot; &quot;2002-08-16&quot; &quot;2002-08-19&quot;
- [406] &quot;2002-08-20&quot; &quot;2002-08-21&quot; &quot;2002-08-22&quot; &quot;2002-08-23&quot; &quot;2002-08-26&quot;
- [411] &quot;2002-08-27&quot; &quot;2002-08-28&quot; &quot;2002-08-29&quot; &quot;2002-08-30&quot; &quot;2002-09-02&quot;
- [416] &quot;2002-09-03&quot; &quot;2002-09-04&quot; &quot;2002-09-05&quot; &quot;2002-09-06&quot; &quot;2002-09-09&quot;
- [421] &quot;2002-09-10&quot; &quot;2002-09-11&quot; &quot;2002-09-12&quot; &quot;2002-09-13&quot; &quot;2002-09-16&quot;
- [426] &quot;2002-09-17&quot; &quot;2002-09-18&quot; &quot;2002-09-19&quot; &quot;2002-09-20&quot; &quot;2002-09-23&quot;
- [431] &quot;2002-09-24&quot; &quot;2002-09-25&quot; &quot;2002-09-26&quot; &quot;2002-09-27&quot; &quot;2002-09-30&quot;
- [436] &quot;2002-10-01&quot; &quot;2002-10-02&quot; &quot;2002-10-03&quot; &quot;2002-10-04&quot; &quot;2002-10-07&quot;
- [441] &quot;2002-10-08&quot; &quot;2002-10-09&quot; &quot;2002-10-10&quot; &quot;2002-10-11&quot; &quot;2002-10-14&quot;
- [446] &quot;2002-10-15&quot; &quot;2002-10-16&quot; &quot;2002-10-17&quot; &quot;2002-10-18&quot; &quot;2002-10-21&quot;
- [451] &quot;2002-10-22&quot; &quot;2002-10-23&quot; &quot;2002-10-24&quot; &quot;2002-10-25&quot; &quot;2002-10-28&quot;
- [456] &quot;2002-10-29&quot; &quot;2002-10-30&quot; &quot;2002-10-31&quot; &quot;2002-11-01&quot; &quot;2002-11-04&quot;
- [461] &quot;2002-11-05&quot; &quot;2002-11-06&quot; &quot;2002-11-10&quot; &quot;2002-11-11&quot; &quot;2002-11-12&quot;
- [466] &quot;2002-11-13&quot; &quot;2002-11-14&quot; &quot;2002-11-15&quot; &quot;2002-11-18&quot; &quot;2002-11-19&quot;
- [471] &quot;2002-11-20&quot; &quot;2002-11-21&quot; &quot;2002-11-22&quot; &quot;2002-11-25&quot; &quot;2002-11-26&quot;
- [476] &quot;2002-11-27&quot; &quot;2002-11-28&quot; &quot;2002-11-29&quot; &quot;2002-12-02&quot; &quot;2002-12-03&quot;
- [481] &quot;2002-12-04&quot; &quot;2002-12-05&quot; &quot;2002-12-06&quot; &quot;2002-12-09&quot; &quot;2002-12-10&quot;
- [486] &quot;2002-12-11&quot; &quot;2002-12-15&quot; &quot;2002-12-16&quot; &quot;2002-12-17&quot; &quot;2002-12-18&quot;
- [491] &quot;2002-12-19&quot; &quot;2002-12-20&quot; &quot;2002-12-23&quot; &quot;2002-12-24&quot; &quot;2002-12-25&quot;
- [496] &quot;2002-12-26&quot; &quot;2002-12-27&quot; &quot;2002-12-30&quot; &quot;2002-12-31&quot; &quot;2003-01-04&quot;
- [501] &quot;2003-01-05&quot; &quot;2003-01-08&quot; &quot;2003-01-09&quot; &quot;2003-01-10&quot; &quot;2003-01-13&quot;
- [506] &quot;2003-01-14&quot; &quot;2003-01-15&quot; &quot;2003-01-16&quot; &quot;2003-01-17&quot; &quot;2003-01-20&quot;
- [511] &quot;2003-01-21&quot; &quot;2003-01-22&quot; &quot;2003-01-23&quot; &quot;2003-01-24&quot; &quot;2003-01-27&quot;
- [516] &quot;2003-01-28&quot; &quot;2003-01-29&quot; &quot;2003-01-30&quot; &quot;2003-01-31&quot; &quot;2003-02-03&quot;
- [521] &quot;2003-02-04&quot; &quot;2003-02-05&quot; &quot;2003-02-06&quot; &quot;2003-02-07&quot; &quot;2003-02-10&quot;
- [526] &quot;2003-02-11&quot; &quot;2003-02-12&quot; &quot;2003-02-13&quot; &quot;2003-02-14&quot; &quot;2003-02-17&quot;
- [531] &quot;2003-02-18&quot; &quot;2003-02-19&quot; &quot;2003-02-20&quot; &quot;2003-02-21&quot; &quot;2003-02-25&quot;
- [536] &quot;2003-02-26&quot; &quot;2003-02-27&quot; &quot;2003-02-28&quot; &quot;2003-03-03&quot; &quot;2003-03-04&quot;
- [541] &quot;2003-03-05&quot; &quot;2003-03-06&quot; &quot;2003-03-07&quot; &quot;2003-03-11&quot; &quot;2003-03-12&quot;
- [546] &quot;2003-03-13&quot; &quot;2003-03-14&quot; &quot;2003-03-17&quot; &quot;2003-03-18&quot; &quot;2003-03-19&quot;
- [551] &quot;2003-03-20&quot; &quot;2003-03-21&quot; &quot;2003-03-24&quot; &quot;2003-03-25&quot; &quot;2003-03-26&quot;
- [556] &quot;2003-03-27&quot; &quot;2003-03-28&quot; &quot;2003-03-31&quot; &quot;2003-04-01&quot; &quot;2003-04-02&quot;
- [561] &quot;2003-04-03&quot; &quot;2003-04-04&quot; &quot;2003-04-07&quot; &quot;2003-04-08&quot; &quot;2003-04-09&quot;
- [566] &quot;2003-04-10&quot; &quot;2003-04-11&quot; &quot;2003-04-14&quot; &quot;2003-04-15&quot; &quot;2003-04-16&quot;
- [571] &quot;2003-04-17&quot; &quot;2003-04-18&quot; &quot;2003-04-21&quot; &quot;2003-04-22&quot; &quot;2003-04-23&quot;
- [576] &quot;2003-04-24&quot; &quot;2003-04-25&quot; &quot;2003-04-28&quot; &quot;2003-04-29&quot; &quot;2003-04-30&quot;
- [581] &quot;2003-05-05&quot; &quot;2003-05-06&quot; &quot;2003-05-07&quot; &quot;2003-05-08&quot; &quot;2003-05-12&quot;
- [586] &quot;2003-05-13&quot; &quot;2003-05-14&quot; &quot;2003-05-15&quot; &quot;2003-05-16&quot; &quot;2003-05-19&quot;
- [591] &quot;2003-05-20&quot; &quot;2003-05-21&quot; &quot;2003-05-22&quot; &quot;2003-05-23&quot; &quot;2003-05-26&quot;
- [596] &quot;2003-05-27&quot; &quot;2003-05-28&quot; &quot;2003-05-29&quot; &quot;2003-05-30&quot; &quot;2003-06-02&quot;
- [601] &quot;2003-06-03&quot; &quot;2003-06-04&quot; &quot;2003-06-05&quot; &quot;2003-06-06&quot; &quot;2003-06-09&quot;
- [606] &quot;2003-06-10&quot; &quot;2003-06-11&quot; &quot;2003-06-16&quot; &quot;2003-06-17&quot; &quot;2003-06-18&quot;
- [611] &quot;2003-06-19&quot; &quot;2003-06-20&quot; &quot;2003-06-21&quot; &quot;2003-06-23&quot; &quot;2003-06-24&quot;
- [616] &quot;2003-06-25&quot; &quot;2003-06-26&quot; &quot;2003-06-27&quot; &quot;2003-06-30&quot; &quot;2003-07-01&quot;
- [621] &quot;2003-07-02&quot; &quot;2003-07-03&quot; &quot;2003-07-04&quot; &quot;2003-07-07&quot; &quot;2003-07-08&quot;
- [626] &quot;2003-07-09&quot; &quot;2003-07-10&quot; &quot;2003-07-11&quot; &quot;2003-07-14&quot; &quot;2003-07-15&quot;
- [631] &quot;2003-07-16&quot; &quot;2003-07-17&quot; &quot;2003-07-18&quot; &quot;2003-07-21&quot; &quot;2003-07-22&quot;
- [636] &quot;2003-07-23&quot; &quot;2003-07-24&quot; &quot;2003-07-25&quot; &quot;2003-07-28&quot; &quot;2003-07-29&quot;
- [641] &quot;2003-07-30&quot; &quot;2003-07-31&quot; &quot;2003-08-01&quot; &quot;2003-08-04&quot; &quot;2003-08-05&quot;
- [646] &quot;2003-08-06&quot; &quot;2003-08-07&quot; &quot;2003-08-08&quot; &quot;2003-08-11&quot; &quot;2003-08-12&quot;
- [651] &quot;2003-08-13&quot; &quot;2003-08-14&quot; &quot;2003-08-15&quot; &quot;2003-08-18&quot; &quot;2003-08-19&quot;
- [656] &quot;2003-08-20&quot; &quot;2003-08-21&quot; &quot;2003-08-22&quot; &quot;2003-08-25&quot; &quot;2003-08-26&quot;
- [661] &quot;2003-08-27&quot; &quot;2003-08-28&quot; &quot;2003-08-29&quot; &quot;2003-09-01&quot; &quot;2003-09-02&quot;
- [666] &quot;2003-09-03&quot; &quot;2003-09-04&quot; &quot;2003-09-05&quot; &quot;2003-09-08&quot; &quot;2003-09-09&quot;
- [671] &quot;2003-09-10&quot; &quot;2003-09-11&quot; &quot;2003-09-12&quot; &quot;2003-09-15&quot; &quot;2003-09-16&quot;
- [676] &quot;2003-09-17&quot; &quot;2003-09-18&quot; &quot;2003-09-19&quot; &quot;2003-09-22&quot; &quot;2003-09-23&quot;
- [681] &quot;2003-09-24&quot; &quot;2003-09-25&quot; &quot;2003-09-26&quot; &quot;2003-09-29&quot; &quot;2003-09-30&quot;
- [686] &quot;2003-10-01&quot; &quot;2003-10-02&quot; &quot;2003-10-03&quot; &quot;2003-10-06&quot; &quot;2003-10-07&quot;
- [691] &quot;2003-10-08&quot; &quot;2003-10-09&quot; &quot;2003-10-10&quot; &quot;2003-10-13&quot; &quot;2003-10-14&quot;
- [696] &quot;2003-10-15&quot; &quot;2003-10-16&quot; &quot;2003-10-17&quot; &quot;2003-10-20&quot; &quot;2003-10-21&quot;
- [701] &quot;2003-10-22&quot; &quot;2003-10-23&quot; &quot;2003-10-24&quot; &quot;2003-10-27&quot; &quot;2003-10-28&quot;
- [706] &quot;2003-10-29&quot; &quot;2003-10-30&quot; &quot;2003-10-31&quot; &quot;2003-11-03&quot; &quot;2003-11-04&quot;
- [711] &quot;2003-11-05&quot; &quot;2003-11-06&quot; &quot;2003-11-10&quot; &quot;2003-11-11&quot; &quot;2003-11-12&quot;
- [716] &quot;2003-11-13&quot; &quot;2003-11-14&quot; &quot;2003-11-17&quot; &quot;2003-11-18&quot; &quot;2003-11-19&quot;
- [721] &quot;2003-11-20&quot; &quot;2003-11-21&quot; &quot;2003-11-24&quot; &quot;2003-11-25&quot; &quot;2003-11-26&quot;
- [726] &quot;2003-11-27&quot; &quot;2003-11-28&quot; &quot;2003-12-01&quot; &quot;2003-12-02&quot; &quot;2003-12-03&quot;
- [731] &quot;2003-12-04&quot; &quot;2003-12-05&quot; &quot;2003-12-08&quot; &quot;2003-12-09&quot; &quot;2003-12-10&quot;
- [736] &quot;2003-12-11&quot; &quot;2003-12-15&quot; &quot;2003-12-16&quot; &quot;2003-12-17&quot; &quot;2003-12-18&quot;
- [741] &quot;2003-12-19&quot; &quot;2003-12-22&quot; &quot;2003-12-23&quot; &quot;2003-12-24&quot; &quot;2003-12-25&quot;
- [746] &quot;2003-12-26&quot; &quot;2003-12-29&quot; &quot;2003-12-30&quot; &quot;2004-01-05&quot; &quot;2004-01-06&quot;
- [751] &quot;2004-01-08&quot; &quot;2004-01-09&quot; &quot;2004-01-12&quot; &quot;2004-01-13&quot; &quot;2004-01-14&quot;
- [756] &quot;2004-01-15&quot; &quot;2004-01-16&quot; &quot;2004-01-19&quot; &quot;2004-01-20&quot; &quot;2004-01-21&quot;
- [761] &quot;2004-01-22&quot; &quot;2004-01-23&quot; &quot;2004-01-26&quot; &quot;2004-01-27&quot; &quot;2004-01-28&quot;
- [766] &quot;2004-01-29&quot; &quot;2004-01-30&quot; &quot;2004-02-02&quot; &quot;2004-02-03&quot; &quot;2004-02-04&quot;
- [771] &quot;2004-02-05&quot; &quot;2004-02-06&quot; &quot;2004-02-09&quot; &quot;2004-02-10&quot; &quot;2004-02-11&quot;
- [776] &quot;2004-02-12&quot; &quot;2004-02-13&quot; &quot;2004-02-16&quot; &quot;2004-02-17&quot; &quot;2004-02-18&quot;
- [781] &quot;2004-02-19&quot; &quot;2004-02-20&quot; &quot;2004-02-24&quot; &quot;2004-02-25&quot; &quot;2004-02-26&quot;
- [786] &quot;2004-02-27&quot; &quot;2004-03-01&quot; &quot;2004-03-02&quot; &quot;2004-03-03&quot; &quot;2004-03-04&quot;
- [791] &quot;2004-03-05&quot; &quot;2004-03-09&quot; &quot;2004-03-10&quot; &quot;2004-03-11&quot; &quot;2004-03-12&quot;
- [796] &quot;2004-03-15&quot; &quot;2004-03-16&quot; &quot;2004-03-17&quot; &quot;2004-03-18&quot; &quot;2004-03-19&quot;
- [801] &quot;2004-03-22&quot; &quot;2004-03-23&quot; &quot;2004-03-24&quot; &quot;2004-03-25&quot; &quot;2004-03-26&quot;
- [806] &quot;2004-03-29&quot; &quot;2004-03-30&quot; &quot;2004-03-31&quot; &quot;2004-04-01&quot; &quot;2004-04-02&quot;
- [811] &quot;2004-04-05&quot; &quot;2004-04-06&quot; &quot;2004-04-07&quot; &quot;2004-04-08&quot; &quot;2004-04-09&quot;
- [816] &quot;2004-04-12&quot; &quot;2004-04-13&quot; &quot;2004-04-14&quot; &quot;2004-04-15&quot; &quot;2004-04-16&quot;
- [821] &quot;2004-04-19&quot; &quot;2004-04-20&quot; &quot;2004-04-21&quot; &quot;2004-04-22&quot; &quot;2004-04-23&quot;
- [826] &quot;2004-04-26&quot; &quot;2004-04-27&quot; &quot;2004-04-28&quot; &quot;2004-04-29&quot; &quot;2004-04-30&quot;
- [831] &quot;2004-05-05&quot; &quot;2004-05-06&quot; &quot;2004-05-07&quot; &quot;2004-05-11&quot; &quot;2004-05-12&quot;
- [836] &quot;2004-05-13&quot; &quot;2004-05-14&quot; &quot;2004-05-17&quot; &quot;2004-05-18&quot; &quot;2004-05-19&quot;
- [841] &quot;2004-05-20&quot; &quot;2004-05-21&quot; &quot;2004-05-24&quot; &quot;2004-05-25&quot; &quot;2004-05-26&quot;
- [846] &quot;2004-05-27&quot; &quot;2004-05-28&quot; &quot;2004-05-31&quot; &quot;2004-06-01&quot; &quot;2004-06-02&quot;
- [851] &quot;2004-06-03&quot; &quot;2004-06-04&quot; &quot;2004-06-07&quot; &quot;2004-06-08&quot; &quot;2004-06-09&quot;
- [856] &quot;2004-06-10&quot; &quot;2004-06-11&quot; &quot;2004-06-15&quot; &quot;2004-06-16&quot; &quot;2004-06-17&quot;
- [861] &quot;2004-06-18&quot; &quot;2004-06-21&quot; &quot;2004-06-22&quot; &quot;2004-06-23&quot; &quot;2004-06-24&quot;
- [866] &quot;2004-06-25&quot; &quot;2004-06-28&quot; &quot;2004-06-29&quot; &quot;2004-06-30&quot; &quot;2004-07-01&quot;
- [871] &quot;2004-07-02&quot; &quot;2004-07-05&quot; &quot;2004-07-06&quot; &quot;2004-07-07&quot; &quot;2004-07-08&quot;
- [876] &quot;2004-07-09&quot; &quot;2004-07-12&quot; &quot;2004-07-13&quot; &quot;2004-07-14&quot; &quot;2004-07-15&quot;
- [881] &quot;2004-07-16&quot; &quot;2004-07-19&quot; &quot;2004-07-20&quot; &quot;2004-07-21&quot; &quot;2004-07-22&quot;
- [886] &quot;2004-07-23&quot; &quot;2004-07-26&quot; &quot;2004-07-27&quot; &quot;2004-07-28&quot; &quot;2004-07-29&quot;
- [891] &quot;2004-07-30&quot; &quot;2004-08-02&quot; &quot;2004-08-03&quot; &quot;2004-08-04&quot; &quot;2004-08-05&quot;
- [896] &quot;2004-08-06&quot; &quot;2004-08-09&quot; &quot;2004-08-10&quot; &quot;2004-08-11&quot; &quot;2004-08-12&quot;
- [901] &quot;2004-08-13&quot; &quot;2004-08-16&quot; &quot;2004-08-17&quot; &quot;2004-08-18&quot; &quot;2004-08-19&quot;
- [906] &quot;2004-08-20&quot; &quot;2004-08-23&quot; &quot;2004-08-24&quot; &quot;2004-08-25&quot; &quot;2004-08-26&quot;
- [911] &quot;2004-08-27&quot; &quot;2004-08-30&quot; &quot;2004-08-31&quot; &quot;2004-09-01&quot; &quot;2004-09-02&quot;
- [916] &quot;2004-09-03&quot; &quot;2004-09-06&quot; &quot;2004-09-07&quot; &quot;2004-09-08&quot; &quot;2004-09-09&quot;
- [921] &quot;2004-09-10&quot; &quot;2004-09-13&quot; &quot;2004-09-14&quot; &quot;2004-09-15&quot; &quot;2004-09-16&quot;
- [926] &quot;2004-09-17&quot; &quot;2004-09-20&quot; &quot;2004-09-21&quot; &quot;2004-09-22&quot; &quot;2004-09-23&quot;
- [931] &quot;2004-09-24&quot; &quot;2004-09-27&quot; &quot;2004-09-28&quot; &quot;2004-09-29&quot; &quot;2004-09-30&quot;
- [936] &quot;2004-10-01&quot; &quot;2004-10-04&quot; &quot;2004-10-05&quot; &quot;2004-10-06&quot; &quot;2004-10-07&quot;
- [941] &quot;2004-10-08&quot; &quot;2004-10-11&quot; &quot;2004-10-12&quot; &quot;2004-10-13&quot; &quot;2004-10-14&quot;
- [946] &quot;2004-10-15&quot; &quot;2004-10-18&quot; &quot;2004-10-19&quot; &quot;2004-10-20&quot; &quot;2004-10-21&quot;
- [951] &quot;2004-10-22&quot; &quot;2004-10-25&quot; &quot;2004-10-26&quot; &quot;2004-10-27&quot; &quot;2004-10-28&quot;
- [956] &quot;2004-10-29&quot; &quot;2004-11-01&quot; &quot;2004-11-02&quot; &quot;2004-11-03&quot; &quot;2004-11-04&quot;
- [961] &quot;2004-11-05&quot; &quot;2004-11-09&quot; &quot;2004-11-10&quot; &quot;2004-11-11&quot; &quot;2004-11-12&quot;
- [966] &quot;2004-11-15&quot; &quot;2004-11-16&quot; &quot;2004-11-17&quot; &quot;2004-11-18&quot; &quot;2004-11-19&quot;
- [971] &quot;2004-11-22&quot; &quot;2004-11-23&quot; &quot;2004-11-24&quot; &quot;2004-11-25&quot; &quot;2004-11-26&quot;
- [976] &quot;2004-11-29&quot; &quot;2004-11-30&quot; &quot;2004-12-01&quot; &quot;2004-12-02&quot; &quot;2004-12-03&quot;
- [981] &quot;2004-12-06&quot; &quot;2004-12-07&quot; &quot;2004-12-08&quot; &quot;2004-12-09&quot; &quot;2004-12-10&quot;
- [986] &quot;2004-12-14&quot; &quot;2004-12-15&quot; &quot;2004-12-16&quot; &quot;2004-12-17&quot; &quot;2004-12-20&quot;
- [991] &quot;2004-12-21&quot; &quot;2004-12-22&quot; &quot;2004-12-23&quot; &quot;2004-12-24&quot; &quot;2004-12-27&quot;
- [996] &quot;2004-12-28&quot; &quot;2004-12-29&quot; &quot;2004-12-30&quot; &quot;2005-01-11&quot; &quot;2005-01-12&quot;
-[1001] &quot;2005-01-13&quot; &quot;2005-01-14&quot; &quot;2005-01-17&quot; &quot;2005-01-18&quot; &quot;2005-01-19&quot;
-[1006] &quot;2005-01-20&quot; &quot;2005-01-21&quot; &quot;2005-01-24&quot; &quot;2005-01-25&quot; &quot;2005-01-26&quot;
-[1011] &quot;2005-01-27&quot; &quot;2005-01-28&quot; &quot;2005-01-31&quot; &quot;2005-02-01&quot; &quot;2005-02-02&quot;
-[1016] &quot;2005-02-03&quot; &quot;2005-02-04&quot; &quot;2005-02-07&quot; &quot;2005-02-08&quot; &quot;2005-02-09&quot;
-[1021] &quot;2005-02-10&quot; &quot;2005-02-11&quot; &quot;2005-02-14&quot; &quot;2005-02-15&quot; &quot;2005-02-16&quot;
-[1026] &quot;2005-02-17&quot; &quot;2005-02-18&quot; &quot;2005-02-21&quot; &quot;2005-02-22&quot; &quot;2005-02-24&quot;
-[1031] &quot;2005-02-25&quot; &quot;2005-02-28&quot; &quot;2005-03-01&quot; &quot;2005-03-02&quot; &quot;2005-03-03&quot;
-[1036] &quot;2005-03-04&quot; &quot;2005-03-05&quot; &quot;2005-03-09&quot; &quot;2005-03-10&quot; &quot;2005-03-11&quot;
-[1041] &quot;2005-03-14&quot; &quot;2005-03-15&quot; &quot;2005-03-16&quot; &quot;2005-03-17&quot; &quot;2005-03-18&quot;
-[1046] &quot;2005-03-21&quot; &quot;2005-03-22&quot; &quot;2005-03-23&quot; &quot;2005-03-24&quot; &quot;2005-03-25&quot;
-[1051] &quot;2005-03-28&quot; &quot;2005-03-29&quot; &quot;2005-03-30&quot; &quot;2005-03-31&quot; &quot;2005-04-01&quot;
-[1056] &quot;2005-04-04&quot; &quot;2005-04-05&quot; &quot;2005-04-06&quot; &quot;2005-04-07&quot; &quot;2005-04-08&quot;
-[1061] &quot;2005-04-11&quot; &quot;2005-04-12&quot; &quot;2005-04-13&quot; &quot;2005-04-14&quot; &quot;2005-04-15&quot;
-[1066] &quot;2005-04-18&quot; &quot;2005-04-19&quot; &quot;2005-04-20&quot; &quot;2005-04-21&quot; &quot;2005-04-22&quot;
-[1071] &quot;2005-04-25&quot; &quot;2005-04-26&quot; &quot;2005-04-27&quot; &quot;2005-04-28&quot; &quot;2005-04-29&quot;
-[1076] &quot;2005-05-03&quot; &quot;2005-05-04&quot; &quot;2005-05-05&quot; &quot;2005-05-06&quot; &quot;2005-05-11&quot;
-[1081] &quot;2005-05-12&quot; &quot;2005-05-13&quot; &quot;2005-05-14&quot; &quot;2005-05-16&quot; &quot;2005-05-17&quot;
-[1086] &quot;2005-05-18&quot; &quot;2005-05-19&quot; &quot;2005-05-20&quot; &quot;2005-05-23&quot; &quot;2005-05-24&quot;
-[1091] &quot;2005-05-25&quot; &quot;2005-05-26&quot; &quot;2005-05-27&quot; &quot;2005-05-30&quot; &quot;2005-05-31&quot;
-[1096] &quot;2005-06-01&quot; &quot;2005-06-02&quot; &quot;2005-06-03&quot; &quot;2005-06-06&quot; &quot;2005-06-07&quot;
-[1101] &quot;2005-06-08&quot; &quot;2005-06-09&quot; &quot;2005-06-10&quot; &quot;2005-06-14&quot; &quot;2005-06-15&quot;
-[1106] &quot;2005-06-16&quot; &quot;2005-06-17&quot; &quot;2005-06-20&quot; &quot;2005-06-21&quot; &quot;2005-06-22&quot;
-[1111] &quot;2005-06-23&quot; &quot;2005-06-24&quot; &quot;2005-06-27&quot; &quot;2005-06-28&quot; &quot;2005-06-29&quot;
-[1116] &quot;2005-06-30&quot; &quot;2005-07-01&quot; &quot;2005-07-04&quot; &quot;2005-07-05&quot; &quot;2005-07-06&quot;
-[1121] &quot;2005-07-07&quot; &quot;2005-07-08&quot; &quot;2005-07-11&quot; &quot;2005-07-12&quot; &quot;2005-07-13&quot;
-[1126] &quot;2005-07-14&quot; &quot;2005-07-15&quot; &quot;2005-07-18&quot; &quot;2005-07-19&quot; &quot;2005-07-20&quot;
-[1131] &quot;2005-07-21&quot; &quot;2005-07-22&quot; &quot;2005-07-25&quot; &quot;2005-07-26&quot; &quot;2005-07-27&quot;
-[1136] &quot;2005-07-28&quot; &quot;2005-07-29&quot; &quot;2005-08-01&quot; &quot;2005-08-02&quot; &quot;2005-08-03&quot;
-[1141] &quot;2005-08-04&quot; &quot;2005-08-05&quot; &quot;2005-08-08&quot; &quot;2005-08-09&quot; &quot;2005-08-10&quot;
-[1146] &quot;2005-08-11&quot; &quot;2005-08-12&quot; &quot;2005-08-15&quot; &quot;2005-08-16&quot; &quot;2005-08-17&quot;
-[1151] &quot;2005-08-18&quot; &quot;2005-08-19&quot; &quot;2005-08-22&quot; &quot;2005-08-23&quot; &quot;2005-08-24&quot;
-[1156] &quot;2005-08-25&quot; &quot;2005-08-26&quot; &quot;2005-08-29&quot; &quot;2005-08-30&quot; &quot;2005-08-31&quot;
-[1161] &quot;2005-09-01&quot; &quot;2005-09-02&quot; &quot;2005-09-05&quot; &quot;2005-09-06&quot; &quot;2005-09-07&quot;
-[1166] &quot;2005-09-08&quot; &quot;2005-09-09&quot; &quot;2005-09-12&quot; &quot;2005-09-13&quot; &quot;2005-09-14&quot;
-[1171] &quot;2005-09-15&quot; &quot;2005-09-16&quot; &quot;2005-09-19&quot; &quot;2005-09-20&quot; &quot;2005-09-21&quot;
-[1176] &quot;2005-09-22&quot; &quot;2005-09-23&quot; &quot;2005-09-26&quot; &quot;2005-09-27&quot; &quot;2005-09-28&quot;
-[1181] &quot;2005-09-29&quot; &quot;2005-09-30&quot; &quot;2005-10-03&quot; &quot;2005-10-04&quot; &quot;2005-10-05&quot;
-[1186] &quot;2005-10-06&quot; &quot;2005-10-07&quot; &quot;2005-10-10&quot; &quot;2005-10-11&quot; &quot;2005-10-12&quot;
-[1191] &quot;2005-10-13&quot; &quot;2005-10-14&quot; &quot;2005-10-17&quot; &quot;2005-10-18&quot; &quot;2005-10-19&quot;
-[1196] &quot;2005-10-20&quot; &quot;2005-10-21&quot; &quot;2005-10-24&quot; &quot;2005-10-25&quot; &quot;2005-10-26&quot;
-[1201] &quot;2005-10-27&quot; &quot;2005-10-28&quot; &quot;2005-10-31&quot; &quot;2005-11-01&quot; &quot;2005-11-02&quot;
-[1206] &quot;2005-11-03&quot; &quot;2005-11-07&quot; &quot;2005-11-08&quot; &quot;2005-11-09&quot; &quot;2005-11-10&quot;
-[1211] &quot;2005-11-11&quot; &quot;2005-11-14&quot; &quot;2005-11-15&quot; &quot;2005-11-16&quot; &quot;2005-11-17&quot;
-[1216] &quot;2005-11-18&quot; &quot;2005-11-21&quot; &quot;2005-11-22&quot; &quot;2005-11-23&quot; &quot;2005-11-24&quot;
-[1221] &quot;2005-11-25&quot; &quot;2005-11-28&quot; &quot;2005-11-29&quot; &quot;2005-11-30&quot; &quot;2005-12-01&quot;
-[1226] &quot;2005-12-02&quot; &quot;2005-12-05&quot; &quot;2005-12-06&quot; &quot;2005-12-07&quot; &quot;2005-12-08&quot;
-[1231] &quot;2005-12-09&quot; &quot;2005-12-12&quot; &quot;2005-12-13&quot; &quot;2005-12-14&quot; &quot;2005-12-15&quot;
-[1236] &quot;2005-12-16&quot; &quot;2005-12-19&quot; &quot;2005-12-20&quot; &quot;2005-12-21&quot; &quot;2005-12-22&quot;
-[1241] &quot;2005-12-23&quot; &quot;2005-12-26&quot; &quot;2005-12-27&quot; &quot;2005-12-28&quot; &quot;2005-12-29&quot;
-[1246] &quot;2005-12-30&quot; &quot;2006-01-10&quot; &quot;2006-01-11&quot; &quot;2006-01-12&quot; &quot;2006-01-13&quot;
-[1251] &quot;2006-01-16&quot; &quot;2006-01-17&quot; &quot;2006-01-18&quot; &quot;2006-01-19&quot; &quot;2006-01-20&quot;
-[1256] &quot;2006-01-23&quot; &quot;2006-01-24&quot; &quot;2006-01-25&quot; &quot;2006-01-26&quot; &quot;2006-01-27&quot;
-[1261] &quot;2006-01-30&quot; &quot;2006-01-31&quot; &quot;2006-02-01&quot; &quot;2006-02-02&quot; &quot;2006-02-03&quot;
-[1266] &quot;2006-02-06&quot; &quot;2006-02-07&quot; &quot;2006-02-08&quot; &quot;2006-02-09&quot; &quot;2006-02-10&quot;
-[1271] &quot;2006-02-13&quot; &quot;2006-02-14&quot; &quot;2006-02-15&quot; &quot;2006-02-16&quot; &quot;2006-02-17&quot;
-[1276] &quot;2006-02-20&quot; &quot;2006-02-21&quot; &quot;2006-02-22&quot; &quot;2006-02-26&quot; &quot;2006-02-27&quot;
-[1281] &quot;2006-02-28&quot; &quot;2006-03-01&quot; &quot;2006-03-02&quot; &quot;2006-03-03&quot; &quot;2006-03-06&quot;
-[1286] &quot;2006-03-07&quot; &quot;2006-03-09&quot; &quot;2006-03-10&quot; &quot;2006-03-13&quot; &quot;2006-03-14&quot;
-[1291] &quot;2006-03-15&quot; &quot;2006-03-16&quot; &quot;2006-03-17&quot; &quot;2006-03-20&quot; &quot;2006-03-21&quot;
-[1296] &quot;2006-03-22&quot; &quot;2006-03-23&quot; &quot;2006-03-24&quot; &quot;2006-03-27&quot; &quot;2006-03-28&quot;
-[1301] &quot;2006-03-29&quot; &quot;2006-03-30&quot; &quot;2006-03-31&quot; &quot;2006-04-03&quot; &quot;2006-04-04&quot;
-[1306] &quot;2006-04-05&quot; &quot;2006-04-06&quot; &quot;2006-04-07&quot; &quot;2006-04-10&quot; &quot;2006-04-11&quot;
-[1311] &quot;2006-04-12&quot; &quot;2006-04-13&quot; &quot;2006-04-14&quot; &quot;2006-04-17&quot; &quot;2006-04-18&quot;
-[1316] &quot;2006-04-19&quot; &quot;2006-04-20&quot; &quot;2006-04-21&quot; &quot;2006-04-24&quot; &quot;2006-04-25&quot;
-[1321] &quot;2006-04-26&quot; &quot;2006-04-27&quot; &quot;2006-04-28&quot; &quot;2006-05-02&quot; &quot;2006-05-03&quot;
-[1326] &quot;2006-05-04&quot; &quot;2006-05-05&quot; &quot;2006-05-06&quot; &quot;2006-05-10&quot; &quot;2006-05-11&quot;
-[1331] &quot;2006-05-12&quot; &quot;2006-05-15&quot; &quot;2006-05-16&quot; &quot;2006-05-17&quot; &quot;2006-05-18&quot;
-[1336] &quot;2006-05-19&quot; &quot;2006-05-22&quot; &quot;2006-05-23&quot; &quot;2006-05-24&quot; &quot;2006-05-25&quot;
-[1341] &quot;2006-05-26&quot; &quot;2006-05-29&quot; &quot;2006-05-30&quot; &quot;2006-05-31&quot; &quot;2006-06-01&quot;
-[1346] &quot;2006-06-02&quot; &quot;2006-06-05&quot; &quot;2006-06-06&quot; &quot;2006-06-07&quot; &quot;2006-06-08&quot;
-[1351] &quot;2006-06-09&quot; &quot;2006-06-13&quot; &quot;2006-06-14&quot; &quot;2006-06-15&quot; &quot;2006-06-16&quot;
-[1356] &quot;2006-06-19&quot; &quot;2006-06-20&quot; &quot;2006-06-21&quot; &quot;2006-06-22&quot; &quot;2006-06-23&quot;
-[1361] &quot;2006-06-26&quot; &quot;2006-06-27&quot; &quot;2006-06-28&quot; &quot;2006-06-29&quot; &quot;2006-06-30&quot;
-[1366] &quot;2006-07-03&quot; &quot;2006-07-04&quot; &quot;2006-07-05&quot; &quot;2006-07-06&quot; &quot;2006-07-07&quot;
-[1371] &quot;2006-07-10&quot; &quot;2006-07-11&quot; &quot;2006-07-12&quot; &quot;2006-07-13&quot; &quot;2006-07-14&quot;
-[1376] &quot;2006-07-17&quot; &quot;2006-07-18&quot; &quot;2006-07-19&quot; &quot;2006-07-20&quot; &quot;2006-07-21&quot;
-[1381] &quot;2006-07-24&quot; &quot;2006-07-25&quot; &quot;2006-07-26&quot; &quot;2006-07-27&quot; &quot;2006-07-28&quot;
-[1386] &quot;2006-07-31&quot; &quot;2006-08-01&quot; &quot;2006-08-02&quot; &quot;2006-08-03&quot; &quot;2006-08-04&quot;
-[1391] &quot;2006-08-07&quot; &quot;2006-08-08&quot; &quot;2006-08-09&quot; &quot;2006-08-10&quot; &quot;2006-08-11&quot;
-[1396] &quot;2006-08-14&quot; &quot;2006-08-15&quot; &quot;2006-08-16&quot; &quot;2006-08-17&quot; &quot;2006-08-18&quot;
-[1401] &quot;2006-08-21&quot; &quot;2006-08-22&quot; &quot;2006-08-23&quot; &quot;2006-08-24&quot; &quot;2006-08-25&quot;
-[1406] &quot;2006-08-28&quot; &quot;2006-08-29&quot; &quot;2006-08-30&quot; &quot;2006-08-31&quot; &quot;2006-09-01&quot;
-[1411] &quot;2006-09-04&quot; &quot;2006-09-05&quot; &quot;2006-09-06&quot; &quot;2006-09-07&quot; &quot;2006-09-08&quot;
-[1416] &quot;2006-09-11&quot; &quot;2006-09-12&quot; &quot;2006-09-13&quot; &quot;2006-09-14&quot; &quot;2006-09-15&quot;
-[1421] &quot;2006-09-18&quot; &quot;2006-09-19&quot; &quot;2006-09-20&quot; &quot;2006-09-21&quot; &quot;2006-09-22&quot;
-[1426] &quot;2006-09-25&quot; &quot;2006-09-26&quot; &quot;2006-09-27&quot; &quot;2006-09-28&quot; &quot;2006-09-29&quot;
-[1431] &quot;2006-10-02&quot; &quot;2006-10-03&quot; &quot;2006-10-04&quot; &quot;2006-10-05&quot; &quot;2006-10-06&quot;
-[1436] &quot;2006-10-09&quot; &quot;2006-10-10&quot; &quot;2006-10-11&quot; &quot;2006-10-12&quot; &quot;2006-10-13&quot;
-[1441] &quot;2006-10-16&quot; &quot;2006-10-17&quot; &quot;2006-10-18&quot; &quot;2006-10-19&quot; &quot;2006-10-20&quot;
-[1446] &quot;2006-10-23&quot; &quot;2006-10-24&quot; &quot;2006-10-25&quot; &quot;2006-10-26&quot; &quot;2006-10-27&quot;
-[1451] &quot;2006-10-30&quot; &quot;2006-10-31&quot; &quot;2006-11-01&quot; &quot;2006-11-02&quot; &quot;2006-11-03&quot;
-[1456] &quot;2006-11-07&quot; &quot;2006-11-08&quot; &quot;2006-11-09&quot; &quot;2006-11-10&quot; &quot;2006-11-13&quot;
-[1461] &quot;2006-11-14&quot; &quot;2006-11-15&quot; &quot;2006-11-16&quot; &quot;2006-11-17&quot; &quot;2006-11-20&quot;
-[1466] &quot;2006-11-21&quot; &quot;2006-11-22&quot; &quot;2006-11-23&quot; &quot;2006-11-24&quot; &quot;2006-11-27&quot;
-[1471] &quot;2006-11-28&quot; &quot;2006-11-29&quot; &quot;2006-11-30&quot; &quot;2006-12-01&quot; &quot;2006-12-04&quot;
-[1476] &quot;2006-12-05&quot; &quot;2006-12-06&quot; &quot;2006-12-07&quot; &quot;2006-12-08&quot; &quot;2006-12-11&quot;
-[1481] &quot;2006-12-12&quot; &quot;2006-12-13&quot; &quot;2006-12-14&quot; &quot;2006-12-15&quot; &quot;2006-12-18&quot;
-[1486] &quot;2006-12-19&quot; &quot;2006-12-20&quot; &quot;2006-12-21&quot; &quot;2006-12-22&quot; &quot;2006-12-25&quot;
-[1491] &quot;2006-12-26&quot; &quot;2006-12-27&quot; &quot;2006-12-28&quot; &quot;2006-12-29&quot; &quot;2007-01-09&quot;
-[1496] &quot;2007-01-10&quot; &quot;2007-01-11&quot; &quot;2007-01-12&quot; &quot;2007-01-15&quot; &quot;2007-01-16&quot;
-[1501] &quot;2007-01-17&quot; &quot;2007-01-18&quot; &quot;2007-01-19&quot; &quot;2007-01-22&quot; &quot;2007-01-23&quot;
-[1506] &quot;2007-01-24&quot; &quot;2007-01-25&quot; &quot;2007-01-26&quot; &quot;2007-01-29&quot; &quot;2007-01-30&quot;
-[1511] &quot;2007-01-31&quot; &quot;2007-02-01&quot; &quot;2007-02-02&quot; &quot;2007-02-05&quot; &quot;2007-02-06&quot;
-[1516] &quot;2007-02-07&quot; &quot;2007-02-08&quot; &quot;2007-02-09&quot; &quot;2007-02-12&quot; &quot;2007-02-13&quot;
-[1521] &quot;2007-02-14&quot; &quot;2007-02-15&quot; &quot;2007-02-16&quot; &quot;2007-02-19&quot; &quot;2007-02-20&quot;
-[1526] &quot;2007-02-21&quot; &quot;2007-02-22&quot; &quot;2007-02-26&quot; &quot;2007-02-27&quot; &quot;2007-02-28&quot;
-[1531] &quot;2007-03-01&quot; &quot;2007-03-02&quot; &quot;2007-03-05&quot; &quot;2007-03-06&quot; &quot;2007-03-07&quot;
-[1536] &quot;2007-03-09&quot; &quot;2007-03-12&quot; &quot;2007-03-13&quot; &quot;2007-03-14&quot; &quot;2007-03-15&quot;
-[1541] &quot;2007-03-16&quot; &quot;2007-03-19&quot; &quot;2007-03-20&quot; &quot;2007-03-21&quot; &quot;2007-03-22&quot;
-[1546] &quot;2007-03-23&quot; &quot;2007-03-26&quot; &quot;2007-03-27&quot; &quot;2007-03-28&quot; &quot;2007-03-29&quot;
-[1551] &quot;2007-03-30&quot; &quot;2007-04-02&quot; &quot;2007-04-03&quot; &quot;2007-04-04&quot; &quot;2007-04-05&quot;
-[1556] &quot;2007-04-06&quot; &quot;2007-04-09&quot; &quot;2007-04-10&quot; &quot;2007-04-11&quot; &quot;2007-04-12&quot;
-[1561] &quot;2007-04-13&quot; &quot;2007-04-16&quot; &quot;2007-04-17&quot; &quot;2007-04-18&quot; &quot;2007-04-19&quot;
-[1566] &quot;2007-04-20&quot; &quot;2007-04-23&quot; &quot;2007-04-24&quot; &quot;2007-04-25&quot; &quot;2007-04-26&quot;
-[1571] &quot;2007-04-27&quot; &quot;2007-04-28&quot; &quot;2007-05-02&quot; &quot;2007-05-03&quot; &quot;2007-05-04&quot;
-[1576] &quot;2007-05-07&quot; &quot;2007-05-08&quot; &quot;2007-05-10&quot; &quot;2007-05-11&quot; &quot;2007-05-14&quot;
-[1581] &quot;2007-05-15&quot; &quot;2007-05-16&quot; &quot;2007-05-17&quot; &quot;2007-05-18&quot; &quot;2007-05-21&quot;
-[1586] &quot;2007-05-22&quot; &quot;2007-05-23&quot; &quot;2007-05-24&quot; &quot;2007-05-25&quot; &quot;2007-05-28&quot;
-[1591] &quot;2007-05-29&quot; &quot;2007-05-30&quot; &quot;2007-05-31&quot; &quot;2007-06-01&quot; &quot;2007-06-04&quot;
-[1596] &quot;2007-06-05&quot; &quot;2007-06-06&quot; &quot;2007-06-07&quot; &quot;2007-06-08&quot; &quot;2007-06-09&quot;
-[1601] &quot;2007-06-13&quot; &quot;2007-06-14&quot; &quot;2007-06-15&quot; &quot;2007-06-18&quot; &quot;2007-06-19&quot;
-[1606] &quot;2007-06-20&quot; &quot;2007-06-21&quot; &quot;2007-06-22&quot; &quot;2007-06-25&quot; &quot;2007-06-26&quot;
-[1611] &quot;2007-06-27&quot; &quot;2007-06-28&quot; &quot;2007-06-29&quot; &quot;2007-07-02&quot; &quot;2007-07-03&quot;
-[1616] &quot;2007-07-04&quot; &quot;2007-07-05&quot; &quot;2007-07-06&quot; &quot;2007-07-09&quot; &quot;2007-07-10&quot;
-[1621] &quot;2007-07-11&quot; &quot;2007-07-12&quot; &quot;2007-07-13&quot; &quot;2007-07-16&quot; &quot;2007-07-17&quot;
-[1626] &quot;2007-07-18&quot; &quot;2007-07-19&quot; &quot;2007-07-20&quot; &quot;2007-07-23&quot; &quot;2007-07-24&quot;
-[1631] &quot;2007-07-25&quot; &quot;2007-07-26&quot; &quot;2007-07-27&quot; &quot;2007-07-30&quot; &quot;2007-07-31&quot;
-[1636] &quot;2007-08-01&quot; &quot;2007-08-02&quot; &quot;2007-08-03&quot; &quot;2007-08-06&quot; &quot;2007-08-07&quot;
-[1641] &quot;2007-08-08&quot; &quot;2007-08-09&quot; &quot;2007-08-10&quot; &quot;2007-08-13&quot; &quot;2007-08-14&quot;
-[1646] &quot;2007-08-15&quot; &quot;2007-08-16&quot; &quot;2007-08-17&quot; &quot;2007-08-20&quot; &quot;2007-08-21&quot;
-[1651] &quot;2007-08-22&quot; &quot;2007-08-23&quot; &quot;2007-08-24&quot; &quot;2007-08-27&quot; &quot;2007-08-28&quot;
-[1656] &quot;2007-08-29&quot; &quot;2007-08-30&quot; &quot;2007-08-31&quot; &quot;2007-09-03&quot; &quot;2007-09-04&quot;
-[1661] &quot;2007-09-05&quot; &quot;2007-09-06&quot; &quot;2007-09-07&quot; &quot;2007-09-10&quot; &quot;2007-09-11&quot;
-[1666] &quot;2007-09-12&quot; &quot;2007-09-13&quot; &quot;2007-09-14&quot; &quot;2007-09-17&quot; &quot;2007-09-18&quot;
-[1671] &quot;2007-09-19&quot; &quot;2007-09-20&quot; &quot;2007-09-21&quot; &quot;2007-09-24&quot; &quot;2007-09-25&quot;
-[1676] &quot;2007-09-26&quot; &quot;2007-09-27&quot; &quot;2007-09-28&quot; &quot;2007-10-01&quot; &quot;2007-10-02&quot;
-[1681] &quot;2007-10-03&quot; &quot;2007-10-04&quot; &quot;2007-10-05&quot; &quot;2007-10-08&quot; &quot;2007-10-09&quot;
-[1686] &quot;2007-10-10&quot; &quot;2007-10-11&quot; &quot;2007-10-12&quot; &quot;2007-10-15&quot; &quot;2007-10-16&quot;
-[1691] &quot;2007-10-17&quot; &quot;2007-10-18&quot; &quot;2007-10-19&quot; &quot;2007-10-22&quot; &quot;2007-10-23&quot;
-[1696] &quot;2007-10-24&quot; &quot;2007-10-25&quot; &quot;2007-10-26&quot; &quot;2007-10-29&quot; &quot;2007-10-30&quot;
-[1701] &quot;2007-10-31&quot; &quot;2007-11-01&quot; &quot;2007-11-02&quot; &quot;2007-11-06&quot; &quot;2007-11-07&quot;
-[1706] &quot;2007-11-08&quot; &quot;2007-11-09&quot; &quot;2007-11-12&quot; &quot;2007-11-13&quot; &quot;2007-11-14&quot;
-[1711] &quot;2007-11-15&quot; &quot;2007-11-16&quot; &quot;2007-11-19&quot; &quot;2007-11-20&quot; &quot;2007-11-21&quot;
-[1716] &quot;2007-11-22&quot; &quot;2007-11-23&quot; &quot;2007-11-26&quot; &quot;2007-11-27&quot; &quot;2007-11-28&quot;
-[1721] &quot;2007-11-29&quot; &quot;2007-11-30&quot; &quot;2007-12-03&quot; &quot;2007-12-04&quot; &quot;2007-12-05&quot;
-[1726] &quot;2007-12-06&quot; &quot;2007-12-07&quot; &quot;2007-12-10&quot; &quot;2007-12-11&quot; &quot;2007-12-12&quot;
-[1731] &quot;2007-12-13&quot; &quot;2007-12-14&quot; &quot;2007-12-17&quot; &quot;2007-12-18&quot; &quot;2007-12-19&quot;
-[1736] &quot;2007-12-20&quot; &quot;2007-12-21&quot; &quot;2007-12-24&quot; &quot;2007-12-25&quot; &quot;2007-12-26&quot;
-[1741] &quot;2007-12-27&quot; &quot;2007-12-28&quot; &quot;2008-01-09&quot; &quot;2008-01-10&quot; &quot;2008-01-11&quot;
-[1746] &quot;2008-01-14&quot; &quot;2008-01-15&quot; &quot;2008-01-16&quot; &quot;2008-01-17&quot; &quot;2008-01-18&quot;
-[1751] &quot;2008-01-21&quot; &quot;2008-01-22&quot; &quot;2008-01-23&quot; &quot;2008-01-24&quot; &quot;2008-01-25&quot;
-[1756] &quot;2008-01-28&quot; &quot;2008-01-29&quot; &quot;2008-01-30&quot; &quot;2008-01-31&quot; &quot;2008-02-01&quot;
-[1761] &quot;2008-02-04&quot; &quot;2008-02-05&quot; &quot;2008-02-06&quot; &quot;2008-02-07&quot; &quot;2008-02-08&quot;
-[1766] &quot;2008-02-11&quot; &quot;2008-02-12&quot; &quot;2008-02-13&quot; &quot;2008-02-14&quot; &quot;2008-02-15&quot;
-[1771] &quot;2008-02-18&quot; &quot;2008-02-19&quot; &quot;2008-02-20&quot; &quot;2008-02-21&quot; &quot;2008-02-22&quot;
-[1776] &quot;2008-02-26&quot; &quot;2008-02-27&quot; &quot;2008-02-28&quot; &quot;2008-02-29&quot; &quot;2008-03-03&quot;
-[1781] &quot;2008-03-04&quot; &quot;2008-03-05&quot; &quot;2008-03-06&quot; &quot;2008-03-07&quot; &quot;2008-03-11&quot;
-[1786] &quot;2008-03-12&quot; &quot;2008-03-13&quot; &quot;2008-03-14&quot; &quot;2008-03-17&quot; &quot;2008-03-18&quot;
-[1791] &quot;2008-03-19&quot; &quot;2008-03-20&quot; &quot;2008-03-21&quot; &quot;2008-03-24&quot; &quot;2008-03-25&quot;
-[1796] &quot;2008-03-26&quot; &quot;2008-03-27&quot; &quot;2008-03-28&quot; &quot;2008-03-31&quot; &quot;2008-04-01&quot;
-[1801] &quot;2008-04-02&quot; &quot;2008-04-03&quot; &quot;2008-04-04&quot; &quot;2008-04-07&quot; &quot;2008-04-08&quot;
-[1806] &quot;2008-04-09&quot; &quot;2008-04-10&quot; &quot;2008-04-11&quot; &quot;2008-04-14&quot; &quot;2008-04-15&quot;
-[1811] &quot;2008-04-16&quot; &quot;2008-04-17&quot; &quot;2008-04-18&quot; &quot;2008-04-21&quot; &quot;2008-04-22&quot;
-[1816] &quot;2008-04-23&quot; &quot;2008-04-24&quot; &quot;2008-04-25&quot; &quot;2008-04-28&quot; &quot;2008-04-29&quot;
-[1821] &quot;2008-04-30&quot; &quot;2008-05-04&quot; &quot;2008-05-05&quot; &quot;2008-05-06&quot; &quot;2008-05-07&quot;
-[1826] &quot;2008-05-08&quot; &quot;2008-05-12&quot; &quot;2008-05-13&quot; &quot;2008-05-14&quot; &quot;2008-05-15&quot;
-[1831] &quot;2008-05-16&quot; &quot;2008-05-19&quot; &quot;2008-05-20&quot; &quot;2008-05-21&quot; &quot;2008-05-22&quot;
-[1836] &quot;2008-05-23&quot; &quot;2008-05-26&quot; &quot;2008-05-27&quot; &quot;2008-05-28&quot; &quot;2008-05-29&quot;
-[1841] &quot;2008-05-30&quot; &quot;2008-06-02&quot; &quot;2008-06-03&quot; &quot;2008-06-04&quot; &quot;2008-06-05&quot;
-[1846] &quot;2008-06-06&quot; &quot;2008-06-07&quot; &quot;2008-06-09&quot; &quot;2008-06-10&quot; &quot;2008-06-11&quot;
-[1851] &quot;2008-06-16&quot; &quot;2008-06-17&quot; &quot;2008-06-18&quot; &quot;2008-06-19&quot; &quot;2008-06-20&quot;
-[1856] &quot;2008-06-23&quot; &quot;2008-06-24&quot; &quot;2008-06-25&quot; &quot;2008-06-26&quot; &quot;2008-06-27&quot;
-[1861] &quot;2008-06-30&quot; &quot;2008-07-01&quot; &quot;2008-07-02&quot; &quot;2008-07-03&quot; &quot;2008-07-04&quot;
-[1866] &quot;2008-07-07&quot; &quot;2008-07-08&quot; &quot;2008-07-09&quot; &quot;2008-07-10&quot; &quot;2008-07-11&quot;
-[1871] &quot;2008-07-14&quot; &quot;2008-07-15&quot; &quot;2008-07-16&quot; &quot;2008-07-17&quot; &quot;2008-07-18&quot;
-[1876] &quot;2008-07-21&quot; &quot;2008-07-22&quot; &quot;2008-07-23&quot; &quot;2008-07-24&quot; &quot;2008-07-25&quot;
-[1881] &quot;2008-07-28&quot; &quot;2008-07-29&quot; &quot;2008-07-30&quot; &quot;2008-07-31&quot; &quot;2008-08-01&quot;
-[1886] &quot;2008-08-04&quot; &quot;2008-08-05&quot; &quot;2008-08-06&quot; &quot;2008-08-07&quot; &quot;2008-08-08&quot;
-[1891] &quot;2008-08-11&quot; &quot;2008-08-12&quot; &quot;2008-08-13&quot; &quot;2008-08-14&quot; &quot;2008-08-15&quot;
-[1896] &quot;2008-08-18&quot; &quot;2008-08-19&quot; &quot;2008-08-20&quot; &quot;2008-08-21&quot; &quot;2008-08-22&quot;
-[1901] &quot;2008-08-25&quot; &quot;2008-08-26&quot; &quot;2008-08-27&quot; &quot;2008-08-28&quot; &quot;2008-08-29&quot;
-[1906] &quot;2008-09-01&quot; &quot;2008-09-02&quot; &quot;2008-09-03&quot; &quot;2008-09-04&quot; &quot;2008-09-05&quot;
-[1911] &quot;2008-09-08&quot; &quot;2008-09-09&quot; &quot;2008-09-10&quot; &quot;2008-09-11&quot; &quot;2008-09-12&quot;
-[1916] &quot;2008-09-15&quot; &quot;2008-09-16&quot; &quot;2008-09-17&quot; &quot;2008-09-19&quot; &quot;2008-09-22&quot;
-[1921] &quot;2008-09-23&quot; &quot;2008-09-24&quot; &quot;2008-09-25&quot; &quot;2008-09-26&quot; &quot;2008-09-29&quot;
-[1926] &quot;2008-09-30&quot; &quot;2008-10-01&quot; &quot;2008-10-02&quot; &quot;2008-10-03&quot; &quot;2008-10-06&quot;
-[1931] &quot;2008-10-07&quot; &quot;2008-10-08&quot; &quot;2008-10-09&quot; &quot;2008-10-13&quot; &quot;2008-10-14&quot;
-[1936] &quot;2008-10-15&quot; &quot;2008-10-16&quot; &quot;2008-10-17&quot; &quot;2008-10-20&quot; &quot;2008-10-21&quot;
-[1941] &quot;2008-10-22&quot; &quot;2008-10-23&quot; &quot;2008-10-24&quot; &quot;2008-10-28&quot; &quot;2008-10-29&quot;
-[1946] &quot;2008-10-30&quot; &quot;2008-10-31&quot; &quot;2008-11-01&quot; &quot;2008-11-05&quot; &quot;2008-11-06&quot;
-[1951] &quot;2008-11-07&quot; &quot;2008-11-10&quot; &quot;2008-11-11&quot; &quot;2008-11-13&quot; &quot;2008-11-14&quot;
-[1956] &quot;2008-11-17&quot; &quot;2008-11-18&quot; &quot;2008-11-19&quot; &quot;2008-11-20&quot; &quot;2008-11-21&quot;
-[1961] &quot;2008-11-24&quot; &quot;2008-11-25&quot; &quot;2008-11-26&quot; &quot;2008-11-27&quot; &quot;2008-11-28&quot;
-[1966] &quot;2008-12-01&quot; &quot;2008-12-02&quot; &quot;2008-12-03&quot; &quot;2008-12-04&quot; &quot;2008-12-05&quot;
-[1971] &quot;2008-12-08&quot; &quot;2008-12-09&quot; &quot;2008-12-10&quot; &quot;2008-12-11&quot; &quot;2008-12-12&quot;
-[1976] &quot;2008-12-15&quot; &quot;2008-12-16&quot; &quot;2008-12-17&quot; &quot;2008-12-18&quot; &quot;2008-12-19&quot;
-[1981] &quot;2008-12-22&quot; &quot;2008-12-23&quot; &quot;2008-12-24&quot; &quot;2008-12-25&quot; &quot;2008-12-26&quot;
-[1986] &quot;2008-12-29&quot; &quot;2008-12-30&quot; &quot;2008-12-31&quot; &quot;2009-01-11&quot; &quot;2009-01-12&quot;
-[1991] &quot;2009-01-13&quot; &quot;2009-01-14&quot; &quot;2009-01-15&quot; &quot;2009-01-16&quot; &quot;2009-01-19&quot;
-[1996] &quot;2009-01-20&quot; &quot;2009-01-21&quot; &quot;2009-01-22&quot; &quot;2009-01-23&quot; &quot;2009-01-26&quot;
-[2001] &quot;2009-01-27&quot; &quot;2009-01-28&quot; &quot;2009-01-29&quot; &quot;2009-01-30&quot; &quot;2009-02-02&quot;
-[2006] &quot;2009-02-03&quot; &quot;2009-02-04&quot; &quot;2009-02-05&quot; &quot;2009-02-06&quot; &quot;2009-02-09&quot;
-[2011] &quot;2009-02-10&quot; &quot;2009-02-11&quot; &quot;2009-02-12&quot; &quot;2009-02-13&quot; &quot;2009-02-16&quot;
-[2016] &quot;2009-02-17&quot; &quot;2009-02-18&quot; &quot;2009-02-19&quot; &quot;2009-02-20&quot; &quot;2009-02-24&quot;
-[2021] &quot;2009-02-25&quot; &quot;2009-02-26&quot; &quot;2009-02-27&quot; &quot;2009-03-02&quot; &quot;2009-03-03&quot;
-[2026] &quot;2009-03-04&quot; &quot;2009-03-05&quot; &quot;2009-03-06&quot; &quot;2009-03-10&quot; &quot;2009-03-11&quot;
-[2031] &quot;2009-03-12&quot; &quot;2009-03-13&quot; &quot;2009-03-16&quot; &quot;2009-03-17&quot; &quot;2009-03-18&quot;
-[2036] &quot;2009-03-19&quot; &quot;2009-03-20&quot; &quot;2009-03-23&quot; &quot;2009-03-24&quot; &quot;2009-03-25&quot;
-[2041] &quot;2009-03-26&quot; &quot;2009-03-27&quot; &quot;2009-03-30&quot; &quot;2009-03-31&quot; &quot;2009-04-01&quot;
-[2046] &quot;2009-04-02&quot; &quot;2009-04-03&quot; &quot;2009-04-06&quot; &quot;2009-04-07&quot; &quot;2009-04-08&quot;
-[2051] &quot;2009-04-09&quot; &quot;2009-04-10&quot; &quot;2009-04-13&quot; &quot;2009-04-14&quot; &quot;2009-04-15&quot;
-[2056] &quot;2009-04-16&quot; &quot;2009-04-17&quot; &quot;2009-04-20&quot; &quot;2009-04-21&quot; &quot;2009-04-22&quot;
-[2061] &quot;2009-04-23&quot; &quot;2009-04-24&quot; &quot;2009-04-27&quot; &quot;2009-04-28&quot; &quot;2009-04-29&quot;
-[2066] &quot;2009-04-30&quot; &quot;2009-05-04&quot; &quot;2009-05-05&quot; &quot;2009-05-06&quot; &quot;2009-05-07&quot;
-[2071] &quot;2009-05-08&quot; &quot;2009-05-12&quot; &quot;2009-05-13&quot; &quot;2009-05-14&quot; &quot;2009-05-15&quot;
-[2076] &quot;2009-05-18&quot; &quot;2009-05-19&quot; &quot;2009-05-20&quot; &quot;2009-05-21&quot; &quot;2009-05-22&quot;
-[2081] &quot;2009-05-25&quot; &quot;2009-05-26&quot; &quot;2009-05-27&quot; &quot;2009-05-28&quot; &quot;2009-05-29&quot;
-[2086] &quot;2009-06-01&quot; &quot;2009-06-02&quot; &quot;2009-06-03&quot; &quot;2009-06-04&quot; &quot;2009-06-05&quot;
-[2091] &quot;2009-06-08&quot; &quot;2009-06-09&quot; &quot;2009-06-10&quot; &quot;2009-06-11&quot; &quot;2009-06-15&quot;
-[2096] &quot;2009-06-16&quot; &quot;2009-06-17&quot; &quot;2009-06-18&quot; &quot;2009-06-19&quot; &quot;2009-06-22&quot;
-[2101] &quot;2009-06-23&quot; &quot;2009-06-24&quot; &quot;2009-06-25&quot; &quot;2009-06-26&quot; &quot;2009-06-29&quot;
-[2106] &quot;2009-06-30&quot; &quot;2009-07-01&quot; &quot;2009-07-02&quot; &quot;2009-07-03&quot; &quot;2009-07-06&quot;
-[2111] &quot;2009-07-07&quot; &quot;2009-07-08&quot; &quot;2009-07-09&quot; &quot;2009-07-10&quot; &quot;2009-07-13&quot;
-[2116] &quot;2009-07-14&quot; &quot;2009-07-15&quot; &quot;2009-07-16&quot; &quot;2009-07-17&quot; &quot;2009-07-20&quot;
-[2121] &quot;2009-07-21&quot; &quot;2009-07-22&quot; &quot;2009-07-23&quot; &quot;2009-07-24&quot; &quot;2009-07-27&quot;
-[2126] &quot;2009-07-28&quot; &quot;2009-07-29&quot; &quot;2009-07-30&quot; &quot;2009-07-31&quot; &quot;2009-08-03&quot;
-[2131] &quot;2009-08-04&quot; &quot;2009-08-05&quot; &quot;2009-08-06&quot; &quot;2009-08-07&quot; &quot;2009-08-10&quot;
-[2136] &quot;2009-08-11&quot; &quot;2009-08-12&quot; &quot;2009-08-13&quot; &quot;2009-08-14&quot; &quot;2009-08-17&quot;
-[2141] &quot;2009-08-18&quot; &quot;2009-08-19&quot; &quot;2009-08-20&quot; &quot;2009-08-21&quot; &quot;2009-08-24&quot;
-[2146] &quot;2009-08-25&quot; &quot;2009-08-26&quot; &quot;2009-08-27&quot; &quot;2009-08-28&quot; &quot;2009-08-31&quot;
-[2151] &quot;2009-09-01&quot; &quot;2009-09-02&quot; &quot;2009-09-03&quot; &quot;2009-09-04&quot; &quot;2009-09-07&quot;
-[2156] &quot;2009-09-08&quot; &quot;2009-09-09&quot; &quot;2009-09-10&quot; &quot;2009-09-11&quot; &quot;2009-09-14&quot;
-[2161] &quot;2009-09-15&quot; &quot;2009-09-16&quot; &quot;2009-09-17&quot; &quot;2009-09-18&quot; &quot;2009-09-21&quot;
-[2166] &quot;2009-09-22&quot; &quot;2009-09-23&quot; &quot;2009-09-24&quot; &quot;2009-09-25&quot; &quot;2009-09-28&quot;
-[2171] &quot;2009-09-29&quot; &quot;2009-09-30&quot; &quot;2009-10-01&quot; &quot;2009-10-02&quot; &quot;2009-10-05&quot;
-[2176] &quot;2009-10-06&quot; &quot;2009-10-07&quot; &quot;2009-10-08&quot; &quot;2009-10-09&quot; &quot;2009-10-12&quot;
-[2181] &quot;2009-10-13&quot; &quot;2009-10-14&quot; &quot;2009-10-15&quot; &quot;2009-10-16&quot; &quot;2009-10-19&quot;
-[2186] &quot;2009-10-20&quot; &quot;2009-10-21&quot; &quot;2009-10-22&quot; &quot;2009-10-23&quot; &quot;2009-10-26&quot;
-[2191] &quot;2009-10-27&quot; &quot;2009-10-28&quot; &quot;2009-10-29&quot; &quot;2009-10-30&quot; &quot;2009-11-02&quot;
-[2196] &quot;2009-11-03&quot; &quot;2009-11-05&quot; &quot;2009-11-06&quot; &quot;2009-11-09&quot; &quot;2009-11-10&quot;
-[2201] &quot;2009-11-11&quot; &quot;2009-11-12&quot; &quot;2009-11-13&quot; &quot;2009-11-16&quot; &quot;2009-11-17&quot;
-[2206] &quot;2009-11-18&quot; &quot;2009-11-19&quot; &quot;2009-11-20&quot; &quot;2009-11-23&quot; &quot;2009-11-24&quot;
-[2211] &quot;2009-11-25&quot; &quot;2009-11-26&quot; &quot;2009-11-27&quot; &quot;2009-11-30&quot; &quot;2009-12-01&quot;
-[2216] &quot;2009-12-02&quot; &quot;2009-12-03&quot; &quot;2009-12-04&quot; &quot;2009-12-07&quot; &quot;2009-12-08&quot;
-[2221] &quot;2009-12-09&quot; &quot;2009-12-10&quot; &quot;2009-12-11&quot; &quot;2009-12-14&quot; &quot;2009-12-15&quot;
-[2226] &quot;2009-12-16&quot; &quot;2009-12-17&quot; &quot;2009-12-18&quot; &quot;2009-12-21&quot; &quot;2009-12-22&quot;
-[2231] &quot;2009-12-23&quot; &quot;2009-12-24&quot; &quot;2009-12-25&quot; &quot;2009-12-28&quot; &quot;2009-12-29&quot;
-[2236] &quot;2009-12-30&quot; &quot;2009-12-31&quot; &quot;2010-01-11&quot; &quot;2010-01-12&quot; &quot;2010-01-13&quot;
-[2241] &quot;2010-01-14&quot; &quot;2010-01-15&quot; &quot;2010-01-18&quot; &quot;2010-01-19&quot; &quot;2010-01-20&quot;
-[2246] &quot;2010-01-21&quot; &quot;2010-01-22&quot; &quot;2010-01-25&quot; &quot;2010-01-26&quot; &quot;2010-01-27&quot;
-[2251] &quot;2010-01-28&quot; &quot;2010-01-29&quot; &quot;2010-02-01&quot; &quot;2010-02-02&quot; &quot;2010-02-03&quot;
-[2256] &quot;2010-02-04&quot; &quot;2010-02-05&quot; &quot;2010-02-08&quot; &quot;2010-02-09&quot; &quot;2010-02-10&quot;
-[2261] &quot;2010-02-11&quot; &quot;2010-02-12&quot; &quot;2010-02-15&quot; &quot;2010-02-16&quot; &quot;2010-02-17&quot;
-[2266] &quot;2010-02-18&quot; &quot;2010-02-19&quot; &quot;2010-02-24&quot; &quot;2010-02-25&quot; &quot;2010-02-26&quot;
-[2271] &quot;2010-02-27&quot; &quot;2010-03-01&quot; &quot;2010-03-02&quot; &quot;2010-03-03&quot; &quot;2010-03-04&quot;
-[2276] &quot;2010-03-05&quot; &quot;2010-03-09&quot; &quot;2010-03-10&quot; &quot;2010-03-11&quot; &quot;2010-03-12&quot;
-[2281] &quot;2010-03-15&quot; &quot;2010-03-16&quot; &quot;2010-03-17&quot; &quot;2010-03-18&quot; &quot;2010-03-19&quot;
-[2286] &quot;2010-03-22&quot; &quot;2010-03-23&quot; &quot;2010-03-24&quot; &quot;2010-03-25&quot; &quot;2010-03-26&quot;
-[2291] &quot;2010-03-29&quot; &quot;2010-03-30&quot; &quot;2010-03-31&quot; &quot;2010-04-01&quot; &quot;2010-04-02&quot;
-[2296] &quot;2010-04-05&quot; &quot;2010-04-06&quot; &quot;2010-04-07&quot; &quot;2010-04-08&quot; &quot;2010-04-09&quot;
-[2301] &quot;2010-04-12&quot; &quot;2010-04-13&quot; &quot;2010-04-14&quot; &quot;2010-04-15&quot; &quot;2010-04-16&quot;
-[2306] &quot;2010-04-19&quot; &quot;2010-04-20&quot; &quot;2010-04-21&quot; &quot;2010-04-22&quot; &quot;2010-04-23&quot;
-[2311] &quot;2010-04-26&quot; &quot;2010-04-27&quot; &quot;2010-04-28&quot; &quot;2010-04-29&quot; &quot;2010-04-30&quot;
-[2316] &quot;2010-05-04&quot; &quot;2010-05-05&quot; &quot;2010-05-06&quot; &quot;2010-05-07&quot; &quot;2010-05-11&quot;
-[2321] &quot;2010-05-12&quot; &quot;2010-05-13&quot; &quot;2010-05-14&quot; &quot;2010-05-17&quot; &quot;2010-05-18&quot;
-[2326] &quot;2010-05-19&quot; &quot;2010-05-20&quot; &quot;2010-05-21&quot; &quot;2010-05-24&quot; &quot;2010-05-25&quot;
-[2331] &quot;2010-05-26&quot; &quot;2010-05-27&quot; &quot;2010-05-28&quot; &quot;2010-05-31&quot; &quot;2010-06-01&quot;
-[2336] &quot;2010-06-02&quot; &quot;2010-06-03&quot; &quot;2010-06-04&quot; &quot;2010-06-07&quot; &quot;2010-06-08&quot;
-[2341] &quot;2010-06-09&quot; &quot;2010-06-10&quot; &quot;2010-06-11&quot; &quot;2010-06-15&quot; &quot;2010-06-16&quot;
-[2346] &quot;2010-06-17&quot; &quot;2010-06-18&quot; &quot;2010-06-21&quot; &quot;2010-06-22&quot; &quot;2010-06-23&quot;
-[2351] &quot;2010-06-24&quot; &quot;2010-06-25&quot; &quot;2010-06-28&quot; &quot;2010-06-29&quot; &quot;2010-06-30&quot;
-[2356] &quot;2010-07-01&quot; &quot;2010-07-02&quot; &quot;2010-07-05&quot; &quot;2010-07-06&quot; &quot;2010-07-07&quot;
-[2361] &quot;2010-07-08&quot; &quot;2010-07-09&quot; &quot;2010-07-12&quot; &quot;2010-07-13&quot; &quot;2010-07-14&quot;
-[2366] &quot;2010-07-15&quot; &quot;2010-07-16&quot; &quot;2010-07-19&quot; &quot;2010-07-20&quot; &quot;2010-07-21&quot;
-[2371] &quot;2010-07-22&quot; &quot;2010-07-23&quot; &quot;2010-07-26&quot; &quot;2010-07-27&quot; &quot;2010-07-28&quot;
-[2376] &quot;2010-07-29&quot; &quot;2010-07-30&quot; &quot;2010-08-02&quot; &quot;2010-08-03&quot; &quot;2010-08-04&quot;
-[2381] &quot;2010-08-05&quot; &quot;2010-08-06&quot; &quot;2010-08-09&quot; &quot;2010-08-10&quot; &quot;2010-08-11&quot;
-[2386] &quot;2010-08-12&quot; &quot;2010-08-13&quot; &quot;2010-08-16&quot; &quot;2010-08-17&quot; &quot;2010-08-18&quot;
-[2391] &quot;2010-08-19&quot; &quot;2010-08-20&quot; &quot;2010-08-23&quot; &quot;2010-08-24&quot; &quot;2010-08-25&quot;
-[2396] &quot;2010-08-26&quot; &quot;2010-08-27&quot; &quot;2010-08-30&quot; &quot;2010-08-31&quot; &quot;2010-09-01&quot;
-[2401] &quot;2010-09-02&quot; &quot;2010-09-03&quot; &quot;2010-09-06&quot; &quot;2010-09-07&quot; &quot;2010-09-08&quot;
-[2406] &quot;2010-09-09&quot; &quot;2010-09-10&quot; &quot;2010-09-13&quot; &quot;2010-09-14&quot; &quot;2010-09-15&quot;
-[2411] &quot;2010-09-16&quot; &quot;2010-09-17&quot; &quot;2010-09-20&quot; &quot;2010-09-21&quot; &quot;2010-09-22&quot;
-[2416] &quot;2010-09-23&quot; &quot;2010-09-24&quot; &quot;2010-09-27&quot; &quot;2010-09-28&quot; &quot;2010-09-29&quot;
-[2421] &quot;2010-09-30&quot; &quot;2010-10-01&quot; &quot;2010-10-04&quot; &quot;2010-10-05&quot; &quot;2010-10-06&quot;
-[2426] &quot;2010-10-07&quot; &quot;2010-10-08&quot; &quot;2010-10-11&quot; &quot;2010-10-12&quot; &quot;2010-10-13&quot;
-[2431] &quot;2010-10-14&quot; &quot;2010-10-15&quot; &quot;2010-10-18&quot; &quot;2010-10-19&quot; &quot;2010-10-20&quot;
-[2436] &quot;2010-10-21&quot; &quot;2010-10-22&quot; &quot;2010-10-25&quot; &quot;2010-10-26&quot; &quot;2010-10-27&quot;
-[2441] &quot;2010-10-28&quot; &quot;2010-10-29&quot; &quot;2010-11-01&quot; &quot;2010-11-02&quot; &quot;2010-11-03&quot;
-[2446] &quot;2010-11-08&quot; &quot;2010-11-09&quot; &quot;2010-11-10&quot; &quot;2010-11-11&quot; &quot;2010-11-12&quot;
-[2451] &quot;2010-11-13&quot; &quot;2010-11-15&quot; &quot;2010-11-16&quot; &quot;2010-11-17&quot; &quot;2010-11-18&quot;
-[2456] &quot;2010-11-19&quot; &quot;2010-11-22&quot; &quot;2010-11-23&quot; &quot;2010-11-24&quot; &quot;2010-11-25&quot;
-[2461] &quot;2010-11-26&quot; &quot;2010-11-29&quot; &quot;2010-11-30&quot; &quot;2010-12-01&quot; &quot;2010-12-02&quot;
-[2466] &quot;2010-12-03&quot; &quot;2010-12-06&quot; &quot;2010-12-07&quot; &quot;2010-12-08&quot; &quot;2010-12-09&quot;
-[2471] &quot;2010-12-10&quot; &quot;2010-12-13&quot; &quot;2010-12-14&quot; &quot;2010-12-15&quot; &quot;2010-12-16&quot;
-[2476] &quot;2010-12-17&quot; &quot;2010-12-20&quot; &quot;2010-12-21&quot; &quot;2010-12-22&quot; &quot;2010-12-23&quot;
-[2481] &quot;2010-12-24&quot; &quot;2010-12-27&quot; &quot;2010-12-28&quot; &quot;2010-12-29&quot; &quot;2010-12-30&quot;
-[2486] &quot;2011-01-11&quot; &quot;2011-01-12&quot; &quot;2011-01-13&quot; &quot;2011-01-14&quot; &quot;2011-01-17&quot;
-[2491] &quot;2011-01-18&quot; &quot;2011-01-19&quot; &quot;2011-01-20&quot; &quot;2011-01-21&quot; &quot;2011-01-24&quot;
-[2496] &quot;2011-01-25&quot; &quot;2011-01-26&quot; &quot;2011-01-27&quot; &quot;2011-01-28&quot; &quot;2011-01-31&quot;
-[2501] &quot;2011-02-01&quot; &quot;2011-02-02&quot; &quot;2011-02-03&quot; &quot;2011-02-04&quot; &quot;2011-02-07&quot;
-[2506] &quot;2011-02-08&quot; &quot;2011-02-09&quot; &quot;2011-02-10&quot; &quot;2011-02-11&quot; &quot;2011-02-14&quot;
-[2511] &quot;2011-02-15&quot; &quot;2011-02-16&quot; &quot;2011-02-17&quot; &quot;2011-02-18&quot; &quot;2011-02-21&quot;
-[2516] &quot;2011-02-22&quot; &quot;2011-02-24&quot; &quot;2011-02-25&quot; &quot;2011-02-28&quot; &quot;2011-03-01&quot;
-[2521] &quot;2011-03-02&quot; &quot;2011-03-03&quot; &quot;2011-03-04&quot; &quot;2011-03-05&quot; &quot;2011-03-09&quot;
-[2526] &quot;2011-03-10&quot; &quot;2011-03-11&quot; &quot;2011-03-14&quot; &quot;2011-03-15&quot; &quot;2011-03-16&quot;
-[2531] &quot;2011-03-17&quot; &quot;2011-03-18&quot; &quot;2011-03-21&quot; &quot;2011-03-22&quot; &quot;2011-03-23&quot;
-[2536] &quot;2011-03-24&quot; &quot;2011-03-25&quot; &quot;2011-03-28&quot; &quot;2011-03-29&quot; &quot;2011-03-30&quot;
-[2541] &quot;2011-03-31&quot; &quot;2011-04-01&quot; &quot;2011-04-04&quot; &quot;2011-04-05&quot; &quot;2011-04-06&quot;
-[2546] &quot;2011-04-07&quot; &quot;2011-04-08&quot; &quot;2011-04-11&quot; &quot;2011-04-12&quot; &quot;2011-04-13&quot;
-[2551] &quot;2011-04-14&quot; &quot;2011-04-15&quot; &quot;2011-04-18&quot; &quot;2011-04-19&quot; &quot;2011-04-20&quot;
-[2556] &quot;2011-04-21&quot; &quot;2011-04-22&quot; &quot;2011-04-25&quot; &quot;2011-04-26&quot; &quot;2011-04-27&quot;
-[2561] &quot;2011-04-28&quot; &quot;2011-04-29&quot; &quot;2011-05-03&quot; &quot;2011-05-04&quot; &quot;2011-05-05&quot;
-[2566] &quot;2011-05-06&quot; &quot;2011-05-10&quot; &quot;2011-05-11&quot; &quot;2011-05-12&quot; &quot;2011-05-13&quot;
-[2571] &quot;2011-05-16&quot; &quot;2011-05-17&quot; &quot;2011-05-18&quot; &quot;2011-05-19&quot; &quot;2011-05-20&quot;
-[2576] &quot;2011-05-23&quot; &quot;2011-05-24&quot; &quot;2011-05-25&quot; &quot;2011-05-26&quot; &quot;2011-05-27&quot;
-[2581] &quot;2011-05-30&quot; &quot;2011-05-31&quot; &quot;2011-06-01&quot; &quot;2011-06-02&quot; &quot;2011-06-03&quot;
-[2586] &quot;2011-06-06&quot; &quot;2011-06-07&quot; &quot;2011-06-08&quot; &quot;2011-06-09&quot; &quot;2011-06-10&quot;
-[2591] &quot;2011-06-14&quot; &quot;2011-06-15&quot; &quot;2011-06-16&quot; &quot;2011-06-17&quot; &quot;2011-06-20&quot;
-[2596] &quot;2011-06-21&quot; &quot;2011-06-22&quot; &quot;2011-06-23&quot; &quot;2011-06-24&quot; &quot;2011-06-27&quot;
-[2601] &quot;2011-06-28&quot; &quot;2011-06-29&quot; &quot;2011-06-30&quot; &quot;2011-07-01&quot; &quot;2011-07-04&quot;
-[2606] &quot;2011-07-05&quot; &quot;2011-07-06&quot; &quot;2011-07-07&quot; &quot;2011-07-08&quot; &quot;2011-07-11&quot;
-[2611] &quot;2011-07-12&quot; &quot;2011-07-13&quot; &quot;2011-07-14&quot; &quot;2011-07-15&quot; &quot;2011-07-18&quot;
-[2616] &quot;2011-07-19&quot; &quot;2011-07-20&quot; &quot;2011-07-21&quot; &quot;2011-07-22&quot; &quot;2011-07-25&quot;
-[2621] &quot;2011-07-26&quot; &quot;2011-07-27&quot; &quot;2011-07-28&quot; &quot;2011-07-29&quot; &quot;2011-08-01&quot;
-[2626] &quot;2011-08-02&quot; &quot;2011-08-03&quot; &quot;2011-08-04&quot; &quot;2011-08-05&quot; &quot;2011-08-08&quot;
-[2631] &quot;2011-08-09&quot; &quot;2011-08-10&quot; &quot;2011-08-11&quot; &quot;2011-08-12&quot; &quot;2011-08-15&quot;
-[2636] &quot;2011-08-16&quot; &quot;2011-08-17&quot; &quot;2011-08-18&quot; &quot;2011-08-19&quot; &quot;2011-08-22&quot;
-[2641] &quot;2011-08-23&quot; &quot;2011-08-24&quot; &quot;2011-08-25&quot; &quot;2011-08-26&quot; &quot;2011-08-29&quot;
-[2646] &quot;2011-08-30&quot; &quot;2011-08-31&quot; &quot;2011-09-01&quot; &quot;2011-09-02&quot; &quot;2011-09-05&quot;
-[2651] &quot;2011-09-06&quot; &quot;2011-09-07&quot; &quot;2011-09-08&quot; &quot;2011-09-09&quot; &quot;2011-09-12&quot;
-[2656] &quot;2011-09-13&quot; &quot;2011-09-14&quot; &quot;2011-09-15&quot; &quot;2011-09-16&quot; &quot;2011-09-19&quot;
-[2661] &quot;2011-09-20&quot; &quot;2011-09-21&quot; &quot;2011-09-22&quot; &quot;2011-09-23&quot; &quot;2011-09-26&quot;
-[2666] &quot;2011-09-27&quot; &quot;2011-09-28&quot; &quot;2011-09-29&quot; &quot;2011-09-30&quot; &quot;2011-10-03&quot;
-[2671] &quot;2011-10-04&quot; &quot;2011-10-05&quot; &quot;2011-10-06&quot; &quot;2011-10-07&quot; &quot;2011-10-10&quot;
-[2676] &quot;2011-10-11&quot; &quot;2011-10-12&quot; &quot;2011-10-13&quot; &quot;2011-10-14&quot; &quot;2011-10-17&quot;
-[2681] &quot;2011-10-18&quot; &quot;2011-10-19&quot; &quot;2011-10-20&quot; &quot;2011-10-21&quot; &quot;2011-10-24&quot;
-[2686] &quot;2011-10-25&quot; &quot;2011-10-26&quot; &quot;2011-10-27&quot; &quot;2011-10-28&quot; &quot;2011-10-31&quot;
-[2691] &quot;2011-11-01&quot; &quot;2011-11-02&quot; &quot;2011-11-03&quot; &quot;2011-11-07&quot; &quot;2011-11-08&quot;
-[2696] &quot;2011-11-09&quot; &quot;2011-11-10&quot; &quot;2011-11-11&quot; &quot;2011-11-14&quot; &quot;2011-11-15&quot;
-[2701] &quot;2011-11-16&quot; &quot;2011-11-17&quot; &quot;2011-11-18&quot; &quot;2011-11-21&quot; &quot;2011-11-22&quot;
-[2706] &quot;2011-11-23&quot; &quot;2011-11-24&quot; &quot;2011-11-25&quot; &quot;2011-11-28&quot; &quot;2011-11-29&quot;
-[2711] &quot;2011-11-30&quot; &quot;2011-12-01&quot; &quot;2011-12-02&quot; &quot;2011-12-05&quot; &quot;2011-12-06&quot;
-[2716] &quot;2011-12-07&quot; &quot;2011-12-08&quot; &quot;2011-12-09&quot; &quot;2011-12-12&quot; &quot;2011-12-13&quot;
-[2721] &quot;2011-12-14&quot; &quot;2011-12-15&quot; &quot;2011-12-16&quot; &quot;2011-12-19&quot; &quot;2011-12-20&quot;
-[2726] &quot;2011-12-21&quot; &quot;2011-12-22&quot; &quot;2011-12-23&quot; &quot;2011-12-26&quot; &quot;2011-12-27&quot;
-[2731] &quot;2011-12-28&quot; &quot;2011-12-29&quot; &quot;2011-12-30&quot; &quot;2012-01-03&quot; &quot;2012-01-04&quot;
-[2736] &quot;2012-01-05&quot; &quot;2012-01-06&quot; &quot;2012-01-09&quot; &quot;2012-01-10&quot; &quot;2012-01-11&quot;
-[2741] &quot;2012-01-12&quot; &quot;2012-01-13&quot; &quot;2012-01-16&quot; &quot;2012-01-17&quot; &quot;2012-01-18&quot;
-[2746] &quot;2012-01-19&quot; &quot;2012-01-20&quot; &quot;2012-01-23&quot; &quot;2012-01-24&quot; &quot;2012-01-25&quot;
-[2751] &quot;2012-01-26&quot; &quot;2012-01-27&quot; &quot;2012-01-30&quot; &quot;2012-01-31&quot; &quot;2012-02-01&quot;
-[2756] &quot;2012-02-02&quot; &quot;2012-02-03&quot; &quot;2012-02-06&quot; &quot;2012-02-07&quot; &quot;2012-02-08&quot;
-[2761] &quot;2012-02-09&quot; &quot;2012-02-10&quot; &quot;2012-02-13&quot; &quot;2012-02-14&quot; &quot;2012-02-15&quot;
-[2766] &quot;2012-02-16&quot; &quot;2012-02-17&quot; &quot;2012-02-20&quot; &quot;2012-02-21&quot; &quot;2012-02-22&quot;
-[2771] &quot;2012-02-24&quot; &quot;2012-02-27&quot; &quot;2012-02-28&quot; &quot;2012-02-29&quot; &quot;2012-03-01&quot;
-[2776] &quot;2012-03-02&quot; &quot;2012-03-05&quot; &quot;2012-03-06&quot; &quot;2012-03-07&quot; &quot;2012-03-11&quot;
-[2781] &quot;2012-03-12&quot; &quot;2012-03-13&quot; &quot;2012-03-14&quot; &quot;2012-03-15&quot; &quot;2012-03-16&quot;
-[2786] &quot;2012-03-19&quot; &quot;2012-03-20&quot; &quot;2012-03-21&quot; &quot;2012-03-22&quot; &quot;2012-03-23&quot;
-[2791] &quot;2012-03-26&quot; &quot;2012-03-27&quot; &quot;2012-03-28&quot; &quot;2012-03-29&quot; &quot;2012-03-30&quot;
-[2796] &quot;2012-04-02&quot; &quot;2012-04-03&quot; &quot;2012-04-04&quot; &quot;2012-04-05&quot; &quot;2012-04-06&quot;
-[2801] &quot;2012-04-09&quot; &quot;2012-04-10&quot; &quot;2012-04-11&quot; &quot;2012-04-12&quot; &quot;2012-04-13&quot;
-[2806] &quot;2012-04-16&quot; &quot;2012-04-17&quot; &quot;2012-04-18&quot; &quot;2012-04-19&quot; &quot;2012-04-20&quot;
-[2811] &quot;2012-04-23&quot; &quot;2012-04-24&quot; &quot;2012-04-25&quot; &quot;2012-04-26&quot; &quot;2012-04-27&quot;
-[2816] &quot;2012-04-28&quot; &quot;2012-05-02&quot; &quot;2012-05-03&quot; &quot;2012-05-04&quot; &quot;2012-05-05&quot;
-[2821] &quot;2012-05-07&quot; &quot;2012-05-08&quot; &quot;2012-05-10&quot; &quot;2012-05-11&quot; &quot;2012-05-12&quot;
-[2826] &quot;2012-05-14&quot; &quot;2012-05-15&quot; &quot;2012-05-16&quot; &quot;2012-05-17&quot; &quot;2012-05-18&quot;
-[2831] &quot;2012-05-21&quot; &quot;2012-05-22&quot; &quot;2012-05-23&quot; &quot;2012-05-24&quot; &quot;2012-05-25&quot;
-[2836] &quot;2012-05-28&quot; &quot;2012-05-29&quot; &quot;2012-05-30&quot; &quot;2012-05-31&quot; &quot;2012-06-01&quot;
-[2841] &quot;2012-06-04&quot; &quot;2012-06-05&quot; &quot;2012-06-06&quot; &quot;2012-06-07&quot; &quot;2012-06-08&quot;
-[2846] &quot;2012-06-09&quot; &quot;2012-06-13&quot; &quot;2012-06-14&quot; &quot;2012-06-15&quot; &quot;2012-06-18&quot;
-[2851] &quot;2012-06-19&quot; &quot;2012-06-20&quot; &quot;2012-06-21&quot; &quot;2012-06-22&quot; &quot;2012-06-25&quot;
-[2856] &quot;2012-06-26&quot; &quot;2012-06-27&quot; &quot;2012-06-28&quot; &quot;2012-06-29&quot; &quot;2012-07-02&quot;
-[2861] &quot;2012-07-03&quot; &quot;2012-07-04&quot; &quot;2012-07-05&quot; &quot;2012-07-06&quot; &quot;2012-07-09&quot;
-[2866] &quot;2012-07-10&quot; &quot;2012-07-11&quot; &quot;2012-07-12&quot; &quot;2012-07-13&quot; &quot;2012-07-16&quot;
-[2871] &quot;2012-07-17&quot; &quot;2012-07-18&quot; &quot;2012-07-19&quot; &quot;2012-07-20&quot; &quot;2012-07-23&quot;
-[2876] &quot;2012-07-24&quot; &quot;2012-07-25&quot; &quot;2012-07-26&quot; &quot;2012-07-27&quot; &quot;2012-07-30&quot;
-[2881] &quot;2012-07-31&quot; &quot;2012-08-01&quot; &quot;2012-08-02&quot; &quot;2012-08-03&quot; &quot;2012-08-06&quot;
-[2886] &quot;2012-08-07&quot; &quot;2012-08-08&quot; &quot;2012-08-09&quot; &quot;2012-08-10&quot; &quot;2012-08-13&quot;
-[2891] &quot;2012-08-14&quot; &quot;2012-08-15&quot; &quot;2012-08-16&quot; &quot;2012-08-17&quot; &quot;2012-08-20&quot;
-[2896] &quot;2012-08-21&quot; &quot;2012-08-22&quot; &quot;2012-08-23&quot; &quot;2012-08-24&quot; &quot;2012-08-27&quot;
-[2901] &quot;2012-08-28&quot; &quot;2012-08-29&quot; &quot;2012-08-30&quot; &quot;2012-08-31&quot; &quot;2012-09-03&quot;
-[2906] &quot;2012-09-04&quot; &quot;2012-09-05&quot; &quot;2012-09-06&quot; &quot;2012-09-07&quot; &quot;2012-09-10&quot;
-[2911] &quot;2012-09-11&quot; &quot;2012-09-12&quot; &quot;2012-09-13&quot; &quot;2012-09-14&quot; &quot;2012-09-17&quot;
-[2916] &quot;2012-09-18&quot; &quot;2012-09-19&quot; &quot;2012-09-20&quot; &quot;2012-09-21&quot; &quot;2012-09-24&quot;
-[2921] &quot;2012-09-25&quot; &quot;2012-09-26&quot; &quot;2012-09-27&quot; &quot;2012-09-28&quot; &quot;2012-10-01&quot;
-[2926] &quot;2012-10-02&quot; &quot;2012-10-03&quot; &quot;2012-10-04&quot; &quot;2012-10-05&quot; &quot;2012-10-08&quot;
-[2931] &quot;2012-10-09&quot; &quot;2012-10-10&quot; &quot;2012-10-11&quot; &quot;2012-10-12&quot; &quot;2012-10-15&quot;
-[2936] &quot;2012-10-16&quot; &quot;2012-10-17&quot; &quot;2012-10-18&quot; &quot;2012-10-19&quot; &quot;2012-10-22&quot;
-[2941] &quot;2012-10-23&quot; &quot;2012-10-24&quot; &quot;2012-10-25&quot; &quot;2012-10-26&quot; &quot;2012-10-29&quot;
-[2946] &quot;2012-10-30&quot; &quot;2012-10-31&quot; &quot;2012-11-01&quot; &quot;2012-11-02&quot; &quot;2012-11-06&quot;
-[2951] &quot;2012-11-07&quot; &quot;2012-11-08&quot; &quot;2012-11-09&quot; &quot;2012-11-12&quot; &quot;2012-11-13&quot;
-[2956] &quot;2012-11-14&quot; &quot;2012-11-15&quot; &quot;2012-11-16&quot; &quot;2012-11-19&quot; &quot;2012-11-20&quot;
-[2961] &quot;2012-11-21&quot; &quot;2012-11-22&quot; &quot;2012-11-23&quot; &quot;2012-11-26&quot; &quot;2012-11-27&quot;
-[2966] &quot;2012-11-28&quot; &quot;2012-11-29&quot; &quot;2012-11-30&quot; &quot;2012-12-03&quot; &quot;2012-12-04&quot;
-[2971] &quot;2012-12-05&quot; &quot;2012-12-06&quot; &quot;2012-12-07&quot; &quot;2012-12-10&quot; &quot;2012-12-11&quot;
-[2976] &quot;2012-12-12&quot; &quot;2012-12-13&quot; &quot;2012-12-14&quot; &quot;2012-12-17&quot; &quot;2012-12-18&quot;
-[2981] &quot;2012-12-19&quot; &quot;2012-12-20&quot; &quot;2012-12-21&quot; &quot;2012-12-24&quot; &quot;2012-12-25&quot;
-[2986] &quot;2012-12-26&quot; &quot;2012-12-27&quot; &quot;2012-12-28&quot; &quot;2013-01-08&quot; &quot;2013-01-09&quot;
-[2991] &quot;2013-01-10&quot; &quot;2013-01-11&quot; &quot;2013-01-14&quot; &quot;2013-01-15&quot; &quot;2013-01-16&quot;
-[2996] &quot;2013-01-17&quot; &quot;2013-01-18&quot; &quot;2013-01-21&quot; &quot;2013-01-22&quot; &quot;2013-01-23&quot;
-[3001] &quot;2013-01-24&quot; &quot;2013-01-25&quot; &quot;2013-01-28&quot; &quot;2013-01-29&quot; &quot;2013-01-30&quot;
-[3006] &quot;2013-01-31&quot; &quot;2013-02-01&quot; &quot;2013-02-04&quot; &quot;2013-02-05&quot; &quot;2013-02-06&quot;
-[3011] &quot;2013-02-07&quot; &quot;2013-02-08&quot; &quot;2013-02-11&quot; &quot;2013-02-12&quot; &quot;2013-02-13&quot;
-[3016] &quot;2013-02-14&quot; &quot;2013-02-15&quot; &quot;2013-02-18&quot; &quot;2013-02-19&quot; &quot;2013-02-20&quot;
-[3021] &quot;2013-02-21&quot; &quot;2013-02-22&quot; &quot;2013-02-25&quot; &quot;2013-02-26&quot; &quot;2013-02-27&quot;
-[3026] &quot;2013-02-28&quot; &quot;2013-03-01&quot; &quot;2013-03-04&quot; &quot;2013-03-05&quot; &quot;2013-03-06&quot;
-[3031] &quot;2013-03-07&quot; &quot;2013-03-11&quot; &quot;2013-03-12&quot; &quot;2013-03-13&quot; &quot;2013-03-14&quot;
-[3036] &quot;2013-03-15&quot; &quot;2013-03-18&quot; &quot;2013-03-19&quot; &quot;2013-03-20&quot; &quot;2013-03-21&quot;
-[3041] &quot;2013-03-22&quot; &quot;2013-03-25&quot; &quot;2013-03-26&quot; &quot;2013-03-27&quot; &quot;2013-03-28&quot;
-[3046] &quot;2013-03-29&quot; &quot;2013-04-01&quot; &quot;2013-04-02&quot; &quot;2013-04-03&quot; &quot;2013-04-04&quot;
-[3051] &quot;2013-04-05&quot; &quot;2013-04-08&quot; &quot;2013-04-09&quot; &quot;2013-04-10&quot; &quot;2013-04-11&quot;
-[3056] &quot;2013-04-12&quot; &quot;2013-04-15&quot; &quot;2013-04-16&quot; &quot;2013-04-17&quot; &quot;2013-04-18&quot;
-[3061] &quot;2013-04-19&quot; &quot;2013-04-22&quot; &quot;2013-04-23&quot; &quot;2013-04-24&quot; &quot;2013-04-25&quot;
-[3066] &quot;2013-04-26&quot; &quot;2013-04-29&quot; &quot;2013-04-30&quot; &quot;2013-05-02&quot; &quot;2013-05-03&quot;
-[3071] &quot;2013-05-06&quot; &quot;2013-05-07&quot; &quot;2013-05-08&quot; &quot;2013-05-10&quot; &quot;2013-05-13&quot;
-[3076] &quot;2013-05-14&quot; &quot;2013-05-15&quot; &quot;2013-05-16&quot; &quot;2013-05-17&quot; &quot;2013-05-20&quot;
-[3081] &quot;2013-05-21&quot; &quot;2013-05-22&quot; &quot;2013-05-23&quot; &quot;2013-05-24&quot; &quot;2013-05-27&quot;
-[3086] &quot;2013-05-28&quot; &quot;2013-05-29&quot; &quot;2013-05-30&quot; &quot;2013-05-31&quot; &quot;2013-06-03&quot;
-[3091] &quot;2013-06-04&quot; &quot;2013-06-05&quot; &quot;2013-06-06&quot; &quot;2013-06-07&quot; &quot;2013-06-10&quot;
-[3096] &quot;2013-06-11&quot; &quot;2013-06-13&quot; &quot;2013-06-14&quot; &quot;2013-06-17&quot; &quot;2013-06-18&quot;
-[3101] &quot;2013-06-19&quot; &quot;2013-06-20&quot; &quot;2013-06-21&quot; &quot;2013-06-24&quot; &quot;2013-06-25&quot;
-[3106] &quot;2013-06-26&quot; &quot;2013-06-27&quot; &quot;2013-06-28&quot; &quot;2013-07-01&quot; &quot;2013-07-02&quot;
-[3111] &quot;2013-07-03&quot; &quot;2013-07-04&quot; &quot;2013-07-05&quot; &quot;2013-07-08&quot; &quot;2013-07-09&quot;
-[3116] &quot;2013-07-10&quot; &quot;2013-07-11&quot; &quot;2013-07-12&quot; &quot;2013-07-15&quot; &quot;2013-07-16&quot;
-[3121] &quot;2013-07-17&quot; &quot;2013-07-18&quot; &quot;2013-07-19&quot; &quot;2013-07-22&quot; &quot;2013-07-23&quot;
-[3126] &quot;2013-07-24&quot; &quot;2013-07-25&quot; &quot;2013-07-26&quot; &quot;2013-07-29&quot; &quot;2013-07-30&quot;
-[3131] &quot;2013-07-31&quot; &quot;2013-08-01&quot; &quot;2013-08-02&quot; &quot;2013-08-05&quot; &quot;2013-08-06&quot;
-[3136] &quot;2013-08-07&quot; &quot;2013-08-08&quot; &quot;2013-08-09&quot; &quot;2013-08-12&quot; &quot;2013-08-13&quot;
-[3141] &quot;2013-08-14&quot; &quot;2013-08-15&quot; &quot;2013-08-16&quot; &quot;2013-08-19&quot; &quot;2013-08-20&quot;
-[3146] &quot;2013-08-21&quot; &quot;2013-08-22&quot; &quot;2013-08-23&quot; &quot;2013-08-26&quot; &quot;2013-08-27&quot;
-[3151] &quot;2013-08-28&quot; &quot;2013-08-29&quot; &quot;2013-08-30&quot; &quot;2013-09-02&quot; &quot;2013-09-03&quot;
-[3156] &quot;2013-09-04&quot; &quot;2013-09-05&quot; &quot;2013-09-06&quot; &quot;2013-09-09&quot; &quot;2013-09-10&quot;
-[3161] &quot;2013-09-11&quot; &quot;2013-09-12&quot; &quot;2013-09-13&quot; &quot;2013-09-16&quot; &quot;2013-09-17&quot;
-[3166] &quot;2013-09-18&quot; &quot;2013-09-19&quot; &quot;2013-09-20&quot; &quot;2013-09-23&quot; &quot;2013-09-24&quot;
-[3171] &quot;2013-09-25&quot; &quot;2013-09-26&quot; &quot;2013-09-27&quot; &quot;2013-09-30&quot; &quot;2013-10-01&quot;
-[3176] &quot;2013-10-02&quot; &quot;2013-10-03&quot; &quot;2013-10-04&quot; &quot;2013-10-07&quot; &quot;2013-10-08&quot;
-[3181] &quot;2013-10-09&quot; &quot;2013-10-10&quot; &quot;2013-10-11&quot; &quot;2013-10-14&quot; &quot;2013-10-15&quot;
-[3186] &quot;2013-10-16&quot; &quot;2013-10-17&quot; &quot;2013-10-18&quot; &quot;2013-10-21&quot; &quot;2013-10-22&quot;
-[3191] &quot;2013-10-23&quot; &quot;2013-10-24&quot; &quot;2013-10-25&quot; &quot;2013-10-28&quot; &quot;2013-10-29&quot;
-[3196] &quot;2013-10-30&quot; &quot;2013-10-31&quot; &quot;2013-11-01&quot; &quot;2013-11-05&quot; &quot;2013-11-06&quot;
-[3201] &quot;2013-11-07&quot; &quot;2013-11-08&quot; &quot;2013-11-11&quot; &quot;2013-11-12&quot; &quot;2013-11-13&quot;
-[3206] &quot;2013-11-14&quot; &quot;2013-11-15&quot; &quot;2013-11-18&quot; &quot;2013-11-19&quot; &quot;2013-11-20&quot;
-[3211] &quot;2013-11-21&quot; &quot;2013-11-22&quot; &quot;2013-11-25&quot; &quot;2013-11-26&quot; &quot;2013-11-27&quot;
-[3216] &quot;2013-11-28&quot; &quot;2013-11-29&quot; &quot;2013-12-02&quot; &quot;2013-12-03&quot; &quot;2013-12-04&quot;
-[3221] &quot;2013-12-05&quot; &quot;2013-12-06&quot; &quot;2013-12-09&quot; &quot;2013-12-10&quot; &quot;2013-12-11&quot;
-[3226] &quot;2013-12-12&quot; &quot;2013-12-13&quot; &quot;2013-12-16&quot; &quot;2013-12-17&quot; &quot;2013-12-18&quot;
-[3231] &quot;2013-12-19&quot; &quot;2013-12-20&quot; &quot;2013-12-23&quot; &quot;2013-12-24&quot; &quot;2013-12-25&quot;
-[3236] &quot;2013-12-26&quot; &quot;2013-12-27&quot; &quot;2013-12-30&quot; &quot;2014-01-06&quot; &quot;2014-01-08&quot;
-[3241] &quot;2014-01-09&quot; &quot;2014-01-10&quot; &quot;2014-01-13&quot; &quot;2014-01-14&quot; &quot;2014-01-15&quot;
-[3246] &quot;2014-01-16&quot; &quot;2014-01-17&quot; &quot;2014-01-20&quot; &quot;2014-01-21&quot; &quot;2014-01-22&quot;
-[3251] &quot;2014-01-23&quot; &quot;2014-01-24&quot; &quot;2014-01-27&quot; &quot;2014-01-28&quot; &quot;2014-01-29&quot;
-[3256] &quot;2014-01-30&quot; &quot;2014-01-31&quot; &quot;2014-02-03&quot; &quot;2014-02-04&quot; &quot;2014-02-05&quot;
-[3261] &quot;2014-02-06&quot; &quot;2014-02-07&quot; &quot;2014-02-10&quot; &quot;2014-02-11&quot; &quot;2014-02-12&quot;
-[3266] &quot;2014-02-13&quot; &quot;2014-02-14&quot; &quot;2014-02-17&quot; &quot;2014-02-18&quot; &quot;2014-02-19&quot;
-[3271] &quot;2014-02-20&quot; &quot;2014-02-21&quot; &quot;2014-02-24&quot; &quot;2014-02-25&quot; &quot;2014-02-26&quot;
-[3276] &quot;2014-02-27&quot; &quot;2014-02-28&quot; &quot;2014-03-03&quot; &quot;2014-03-04&quot; &quot;2014-03-05&quot;
-[3281] &quot;2014-03-06&quot; &quot;2014-03-07&quot; &quot;2014-03-11&quot; &quot;2014-03-12&quot; &quot;2014-03-13&quot;
-[3286] &quot;2014-03-14&quot; &quot;2014-03-17&quot; &quot;2014-03-18&quot; &quot;2014-03-19&quot; &quot;2014-03-20&quot;
-[3291] &quot;2014-03-21&quot; &quot;2014-03-24&quot; &quot;2014-03-25&quot; &quot;2014-03-26&quot; &quot;2014-03-27&quot;
-[3296] &quot;2014-03-28&quot; &quot;2014-03-31&quot; &quot;2014-04-01&quot; &quot;2014-04-02&quot; &quot;2014-04-03&quot;
-[3301] &quot;2014-04-04&quot; &quot;2014-04-07&quot; &quot;2014-04-08&quot; &quot;2014-04-09&quot; &quot;2014-04-10&quot;
-[3306] &quot;2014-04-11&quot; &quot;2014-04-14&quot; &quot;2014-04-15&quot; &quot;2014-04-16&quot; &quot;2014-04-17&quot;
-[3311] &quot;2014-04-18&quot; &quot;2014-04-21&quot; &quot;2014-04-22&quot; &quot;2014-04-23&quot; &quot;2014-04-24&quot;
-[3316] &quot;2014-04-25&quot; &quot;2014-04-28&quot; &quot;2014-04-29&quot; &quot;2014-04-30&quot; &quot;2014-05-02&quot;
-[3321] &quot;2014-05-05&quot; &quot;2014-05-06&quot; &quot;2014-05-07&quot; &quot;2014-05-08&quot; &quot;2014-05-12&quot;
-[3326] &quot;2014-05-13&quot; &quot;2014-05-14&quot; &quot;2014-05-15&quot; &quot;2014-05-16&quot; &quot;2014-05-19&quot;
-[3331] &quot;2014-05-20&quot; &quot;2014-05-21&quot; &quot;2014-05-22&quot; &quot;2014-05-23&quot; &quot;2014-05-26&quot;
-[3336] &quot;2014-05-27&quot; &quot;2014-05-28&quot; &quot;2014-05-29&quot; &quot;2014-05-30&quot; &quot;2014-06-02&quot;
-[3341] &quot;2014-06-03&quot; &quot;2014-06-04&quot; &quot;2014-06-05&quot; &quot;2014-06-06&quot; &quot;2014-06-09&quot;
-[3346] &quot;2014-06-10&quot; &quot;2014-06-11&quot; &quot;2014-06-16&quot; &quot;2014-06-17&quot; &quot;2014-06-18&quot;
-[3351] &quot;2014-06-19&quot; &quot;2014-06-20&quot; &quot;2014-06-23&quot; &quot;2014-06-24&quot; &quot;2014-06-25&quot;
-[3356] &quot;2014-06-26&quot; &quot;2014-06-27&quot; &quot;2014-06-30&quot; &quot;2014-07-01&quot; &quot;2014-07-02&quot;
-[3361] &quot;2014-07-03&quot; &quot;2014-07-04&quot; &quot;2014-07-07&quot; &quot;2014-07-08&quot; &quot;2014-07-09&quot;
-[3366] &quot;2014-07-10&quot; &quot;2014-07-11&quot; &quot;2014-07-14&quot; &quot;2014-07-15&quot; &quot;2014-07-16&quot;
-[3371] &quot;2014-07-17&quot; &quot;2014-07-18&quot; &quot;2014-07-21&quot; &quot;2014-07-22&quot; &quot;2014-07-23&quot;
-[3376] &quot;2014-07-24&quot; &quot;2014-07-25&quot; &quot;2014-07-28&quot; &quot;2014-07-29&quot; &quot;2014-07-30&quot;
-[3381] &quot;2014-07-31&quot; &quot;2014-08-01&quot; &quot;2014-08-04&quot; &quot;2014-08-05&quot; &quot;2014-08-06&quot;
-[3386] &quot;2014-08-07&quot; &quot;2014-08-08&quot; &quot;2014-08-11&quot; &quot;2014-08-12&quot; &quot;2014-08-13&quot;
-[3391] &quot;2014-08-14&quot; &quot;2014-08-15&quot; &quot;2014-08-18&quot; &quot;2014-08-19&quot; &quot;2014-08-20&quot;
-[3396] &quot;2014-08-21&quot; &quot;2014-08-22&quot; &quot;2014-08-25&quot; &quot;2014-08-26&quot; &quot;2014-08-27&quot;
-[3401] &quot;2014-08-28&quot; &quot;2014-08-29&quot; &quot;2014-09-01&quot; &quot;2014-09-02&quot; &quot;2014-09-03&quot;
-[3406] &quot;2014-09-04&quot; &quot;2014-09-05&quot; &quot;2014-09-08&quot; &quot;2014-09-09&quot; &quot;2014-09-10&quot;
-[3411] &quot;2014-09-11&quot; &quot;2014-09-12&quot; &quot;2014-09-15&quot; &quot;2014-09-16&quot; &quot;2014-09-17&quot;
-[3416] &quot;2014-09-18&quot; &quot;2014-09-19&quot; &quot;2014-09-22&quot; &quot;2014-09-23&quot; &quot;2014-09-24&quot;
-[3421] &quot;2014-09-25&quot; &quot;2014-09-26&quot; &quot;2014-09-29&quot; &quot;2014-09-30&quot; &quot;2014-10-01&quot;
-[3426] &quot;2014-10-02&quot; &quot;2014-10-03&quot; &quot;2014-10-06&quot; &quot;2014-10-07&quot; &quot;2014-10-08&quot;
-[3431] &quot;2014-10-09&quot; &quot;2014-10-10&quot; &quot;2014-10-13&quot; &quot;2014-10-14&quot; &quot;2014-10-15&quot;
-[3436] &quot;2014-10-16&quot; &quot;2014-10-17&quot; &quot;2014-10-20&quot; &quot;2014-10-21&quot; &quot;2014-10-22&quot;
-[3441] &quot;2014-10-23&quot; &quot;2014-10-24&quot; &quot;2014-10-27&quot; &quot;2014-10-28&quot; &quot;2014-10-29&quot;
-[3446] &quot;2014-10-30&quot; &quot;2014-10-31&quot; &quot;2014-11-03&quot; &quot;2014-11-05&quot; &quot;2014-11-06&quot;
-[3451] &quot;2014-11-07&quot; &quot;2014-11-10&quot; &quot;2014-11-11&quot; &quot;2014-11-12&quot; &quot;2014-11-13&quot;
-[3456] &quot;2014-11-14&quot; &quot;2014-11-17&quot; &quot;2014-11-18&quot; &quot;2014-11-19&quot; &quot;2014-11-20&quot;
-[3461] &quot;2014-11-21&quot; &quot;2014-11-24&quot; &quot;2014-11-25&quot; &quot;2014-11-26&quot; &quot;2014-11-27&quot;
-[3466] &quot;2014-11-28&quot; &quot;2014-12-01&quot; &quot;2014-12-02&quot; &quot;2014-12-03&quot; &quot;2014-12-04&quot;
-[3471] &quot;2014-12-05&quot; &quot;2014-12-08&quot; &quot;2014-12-09&quot; &quot;2014-12-10&quot; &quot;2014-12-11&quot;
-[3476] &quot;2014-12-12&quot; &quot;2014-12-15&quot; &quot;2014-12-16&quot; &quot;2014-12-17&quot; &quot;2014-12-18&quot;
-[3481] &quot;2014-12-19&quot; &quot;2014-12-22&quot; &quot;2014-12-23&quot; &quot;2014-12-24&quot; &quot;2014-12-25&quot;
-[3486] &quot;2014-12-26&quot; &quot;2014-12-29&quot; &quot;2014-12-30&quot; &quot;2015-01-05&quot; &quot;2015-01-06&quot;
-[3491] &quot;2015-01-08&quot; &quot;2015-01-09&quot; &quot;2015-01-12&quot; &quot;2015-01-13&quot; &quot;2015-01-14&quot;
-[3496] &quot;2015-01-15&quot; &quot;2015-01-16&quot; &quot;2015-01-19&quot; &quot;2015-01-20&quot; &quot;2015-01-21&quot;
-[3501] &quot;2015-01-22&quot; &quot;2015-01-23&quot; &quot;2015-01-26&quot; &quot;2015-01-27&quot; &quot;2015-01-28&quot;
-[3506] &quot;2015-01-29&quot; &quot;2015-01-30&quot; &quot;2015-02-02&quot; &quot;2015-02-03&quot; &quot;2015-02-04&quot;
-[3511] &quot;2015-02-05&quot; &quot;2015-02-06&quot; &quot;2015-02-09&quot; &quot;2015-02-10&quot; &quot;2015-02-11&quot;
-[3516] &quot;2015-02-12&quot; &quot;2015-02-13&quot; &quot;2015-02-16&quot; &quot;2015-02-17&quot; &quot;2015-02-18&quot;
-[3521] &quot;2015-02-19&quot; &quot;2015-02-20&quot; &quot;2015-02-24&quot; &quot;2015-02-25&quot; &quot;2015-02-26&quot;
-[3526] &quot;2015-02-27&quot; &quot;2015-03-02&quot; &quot;2015-03-03&quot; &quot;2015-03-04&quot; &quot;2015-03-05&quot;
-[3531] &quot;2015-03-06&quot; &quot;2015-03-10&quot; &quot;2015-03-11&quot; &quot;2015-03-12&quot; &quot;2015-03-13&quot;
-[3536] &quot;2015-03-16&quot; &quot;2015-03-17&quot; &quot;2015-03-18&quot; &quot;2015-03-19&quot; &quot;2015-03-20&quot;
-[3541] &quot;2015-03-23&quot; &quot;2015-03-24&quot; &quot;2015-03-25&quot; &quot;2015-03-26&quot; &quot;2015-03-27&quot;
-[3546] &quot;2015-03-30&quot; &quot;2015-03-31&quot; &quot;2015-04-01&quot; &quot;2015-04-02&quot; &quot;2015-04-03&quot;
-[3551] &quot;2015-04-06&quot; &quot;2015-04-07&quot; &quot;2015-04-08&quot; &quot;2015-04-09&quot; &quot;2015-04-10&quot;
-[3556] &quot;2015-04-13&quot; &quot;2015-04-14&quot; &quot;2015-04-15&quot; &quot;2015-04-16&quot; &quot;2015-04-17&quot;
-[3561] &quot;2015-04-20&quot; &quot;2015-04-21&quot; &quot;2015-04-22&quot; &quot;2015-04-23&quot; &quot;2015-04-24&quot;
-[3566] &quot;2015-04-27&quot; &quot;2015-04-28&quot; &quot;2015-04-29&quot; &quot;2015-04-30&quot; &quot;2015-05-05&quot;
-[3571] &quot;2015-05-06&quot; &quot;2015-05-07&quot; &quot;2015-05-08&quot; &quot;2015-05-12&quot; &quot;2015-05-13&quot;
-[3576] &quot;2015-05-14&quot; &quot;2015-05-15&quot; &quot;2015-05-18&quot; &quot;2015-05-19&quot; &quot;2015-05-20&quot;
-[3581] &quot;2015-05-21&quot; &quot;2015-05-22&quot; &quot;2015-05-25&quot; &quot;2015-05-26&quot; &quot;2015-05-27&quot;
-[3586] &quot;2015-05-28&quot; &quot;2015-05-29&quot; &quot;2015-06-01&quot; &quot;2015-06-02&quot; &quot;2015-06-03&quot;
-[3591] &quot;2015-06-04&quot; &quot;2015-06-05&quot; &quot;2015-06-08&quot; &quot;2015-06-09&quot; &quot;2015-06-10&quot;
-[3596] &quot;2015-06-11&quot; &quot;2015-06-15&quot; &quot;2015-06-16&quot; &quot;2015-06-17&quot; &quot;2015-06-18&quot;
-[3601] &quot;2015-06-19&quot; &quot;2015-06-22&quot; &quot;2015-06-23&quot; &quot;2015-06-24&quot; &quot;2015-06-25&quot;
-[3606] &quot;2015-06-26&quot; &quot;2015-06-29&quot; &quot;2015-06-30&quot; &quot;2015-07-01&quot; &quot;2015-07-02&quot;
-[3611] &quot;2015-07-03&quot; &quot;2015-07-06&quot; &quot;2015-07-07&quot; &quot;2015-07-08&quot; &quot;2015-07-09&quot;
-[3616] &quot;2015-07-10&quot; &quot;2015-07-13&quot; &quot;2015-07-14&quot; &quot;2015-07-15&quot; &quot;2015-07-16&quot;
-[3621] &quot;2015-07-17&quot; &quot;2015-07-20&quot; &quot;2015-07-21&quot; &quot;2015-07-22&quot; &quot;2015-07-23&quot;
-[3626] &quot;2015-07-24&quot; &quot;2015-07-27&quot; &quot;2015-07-28&quot; &quot;2015-07-29&quot; &quot;2015-07-30&quot;
-[3631] &quot;2015-07-31&quot; &quot;2015-08-03&quot; &quot;2015-08-04&quot; &quot;2015-08-05&quot; &quot;2015-08-06&quot;
-[3636] &quot;2015-08-07&quot; &quot;2015-08-10&quot; &quot;2015-08-11&quot; &quot;2015-08-12&quot; &quot;2015-08-13&quot;
-[3641] &quot;2015-08-14&quot; &quot;2015-08-17&quot; &quot;2015-08-18&quot; &quot;2015-08-19&quot; &quot;2015-08-20&quot;
-[3646] &quot;2015-08-21&quot; &quot;2015-08-24&quot; &quot;2015-08-25&quot; &quot;2015-08-26&quot; &quot;2015-08-27&quot;
-[3651] &quot;2015-08-28&quot; &quot;2015-08-31&quot; &quot;2015-09-01&quot; &quot;2015-09-02&quot; &quot;2015-09-03&quot;
-[3656] &quot;2015-09-04&quot; &quot;2015-09-07&quot; &quot;2015-09-08&quot; &quot;2015-09-09&quot; &quot;2015-09-10&quot;
-[3661] &quot;2015-09-11&quot; &quot;2015-09-14&quot; &quot;2015-09-15&quot; &quot;2015-09-16&quot; &quot;2015-09-17&quot;
-[3666] &quot;2015-09-18&quot; &quot;2015-09-21&quot; &quot;2015-09-22&quot; &quot;2015-09-23&quot; &quot;2015-09-24&quot;
-[3671] &quot;2015-09-25&quot; &quot;2015-09-28&quot; &quot;2015-09-29&quot; &quot;2015-09-30&quot; &quot;2015-10-01&quot;
-[3676] &quot;2015-10-02&quot; &quot;2015-10-05&quot; &quot;2015-10-06&quot; &quot;2015-10-07&quot; &quot;2015-10-08&quot;
-[3681] &quot;2015-10-09&quot; &quot;2015-10-12&quot; &quot;2015-10-13&quot; &quot;2015-10-14&quot; &quot;2015-10-15&quot;
-[3686] &quot;2015-10-16&quot; &quot;2015-10-19&quot; &quot;2015-10-20&quot; &quot;2015-10-21&quot; &quot;2015-10-22&quot;
-[3691] &quot;2015-10-23&quot; &quot;2015-10-26&quot; &quot;2015-10-27&quot; &quot;2015-10-28&quot; &quot;2015-10-29&quot;
-[3696] &quot;2015-10-30&quot; &quot;2015-11-02&quot; &quot;2015-11-03&quot; &quot;2015-11-05&quot; &quot;2015-11-06&quot;
-[3701] &quot;2015-11-09&quot; &quot;2015-11-10&quot; &quot;2015-11-11&quot; &quot;2015-11-12&quot; &quot;2015-11-13&quot;
-[3706] &quot;2015-11-16&quot; &quot;2015-11-17&quot; &quot;2015-11-18&quot; &quot;2015-11-19&quot; &quot;2015-11-20&quot;
-[3711] &quot;2015-11-23&quot; &quot;2015-11-24&quot; &quot;2015-11-25&quot; &quot;2015-11-26&quot; &quot;2015-11-27&quot;
-[3716] &quot;2015-11-30&quot; &quot;2015-12-01&quot; &quot;2015-12-02&quot; &quot;2015-12-03&quot; &quot;2015-12-04&quot;
-[3721] &quot;2015-12-07&quot; &quot;2015-12-08&quot; &quot;2015-12-09&quot; &quot;2015-12-10&quot; &quot;2015-12-11&quot;
-[3726] &quot;2015-12-14&quot; &quot;2015-12-15&quot; &quot;2015-12-16&quot; &quot;2015-12-17&quot; &quot;2015-12-18&quot;
-[3731] &quot;2015-12-21&quot; &quot;2015-12-22&quot; &quot;2015-12-23&quot; &quot;2015-12-24&quot; &quot;2015-12-25&quot;
-[3736] &quot;2015-12-28&quot; &quot;2015-12-29&quot; &quot;2015-12-30&quot; &quot;2016-01-04&quot; &quot;2016-01-05&quot;
-[3741] &quot;2016-01-06&quot; &quot;2016-01-11&quot; &quot;2016-01-12&quot; &quot;2016-01-13&quot; &quot;2016-01-14&quot;
-[3746] &quot;2016-01-15&quot; &quot;2016-01-18&quot; &quot;2016-01-19&quot; &quot;2016-01-20&quot; &quot;2016-01-21&quot;
-[3751] &quot;2016-01-22&quot; &quot;2016-01-25&quot; &quot;2016-01-26&quot; &quot;2016-01-27&quot; &quot;2016-01-28&quot;
-[3756] &quot;2016-01-29&quot; &quot;2016-02-01&quot; &quot;2016-02-02&quot; &quot;2016-02-03&quot; &quot;2016-02-04&quot;
-[3761] &quot;2016-02-05&quot; &quot;2016-02-08&quot; &quot;2016-02-09&quot; &quot;2016-02-10&quot; &quot;2016-02-11&quot;
-[3766] &quot;2016-02-12&quot; &quot;2016-02-15&quot; &quot;2016-02-16&quot; &quot;2016-02-17&quot; &quot;2016-02-18&quot;
-[3771] &quot;2016-02-19&quot; &quot;2016-02-20&quot; &quot;2016-02-22&quot; &quot;2016-02-24&quot; &quot;2016-02-25&quot;
-[3776] &quot;2016-02-26&quot; &quot;2016-02-29&quot; &quot;2016-03-01&quot; &quot;2016-03-02&quot; &quot;2016-03-03&quot;
-[3781] &quot;2016-03-04&quot; &quot;2016-03-07&quot; &quot;2016-03-09&quot; &quot;2016-03-10&quot; &quot;2016-03-11&quot;
-[3786] &quot;2016-03-14&quot; &quot;2016-03-15&quot; &quot;2016-03-16&quot; &quot;2016-03-17&quot; &quot;2016-03-18&quot;
-[3791] &quot;2016-03-21&quot; &quot;2016-03-22&quot; &quot;2016-03-23&quot; &quot;2016-03-24&quot; &quot;2016-03-25&quot;
-[3796] &quot;2016-03-28&quot; &quot;2016-03-29&quot; &quot;2016-03-30&quot; &quot;2016-03-31&quot; &quot;2016-04-01&quot;
-[3801] &quot;2016-04-04&quot; &quot;2016-04-05&quot; &quot;2016-04-06&quot; &quot;2016-04-07&quot; &quot;2016-04-08&quot;
-[3806] &quot;2016-04-11&quot; &quot;2016-04-12&quot; &quot;2016-04-13&quot; &quot;2016-04-14&quot; &quot;2016-04-15&quot;
-[3811] &quot;2016-04-18&quot; &quot;2016-04-19&quot; &quot;2016-04-20&quot; &quot;2016-04-21&quot; &quot;2016-04-22&quot;
-[3816] &quot;2016-04-25&quot; &quot;2016-04-26&quot; &quot;2016-04-27&quot; &quot;2016-04-28&quot; &quot;2016-04-29&quot;
-[3821] &quot;2016-05-04&quot; &quot;2016-05-05&quot; &quot;2016-05-06&quot; &quot;2016-05-10&quot; &quot;2016-05-11&quot;
-[3826] &quot;2016-05-12&quot; &quot;2016-05-13&quot; &quot;2016-05-16&quot; &quot;2016-05-17&quot; &quot;2016-05-18&quot;
-[3831] &quot;2016-05-19&quot; &quot;2016-05-20&quot; &quot;2016-05-23&quot; &quot;2016-05-24&quot; &quot;2016-05-25&quot;
-[3836] &quot;2016-05-26&quot; &quot;2016-05-27&quot; &quot;2016-05-30&quot; &quot;2016-05-31&quot; &quot;2016-06-01&quot;
-[3841] &quot;2016-06-02&quot; &quot;2016-06-03&quot; &quot;2016-06-06&quot; &quot;2016-06-07&quot; &quot;2016-06-08&quot;
-[3846] &quot;2016-06-09&quot; &quot;2016-06-10&quot; &quot;2016-06-14&quot; &quot;2016-06-15&quot; &quot;2016-06-16&quot;
-[3851] &quot;2016-06-17&quot; &quot;2016-06-20&quot; &quot;2016-06-21&quot; &quot;2016-06-22&quot; &quot;2016-06-23&quot;
-[3856] &quot;2016-06-24&quot; &quot;2016-06-27&quot; &quot;2016-06-28&quot; &quot;2016-06-29&quot; &quot;2016-06-30&quot;
-[3861] &quot;2016-07-01&quot; &quot;2016-07-04&quot; &quot;2016-07-05&quot; &quot;2016-07-06&quot; &quot;2016-07-07&quot;
-[3866] &quot;2016-07-08&quot; &quot;2016-07-11&quot; &quot;2016-07-12&quot; &quot;2016-07-13&quot; &quot;2016-07-14&quot;
-[3871] &quot;2016-07-15&quot; &quot;2016-07-18&quot; &quot;2016-07-19&quot; &quot;2016-07-20&quot; &quot;2016-07-21&quot;
-[3876] &quot;2016-07-22&quot; &quot;2016-07-25&quot; &quot;2016-07-26&quot; &quot;2016-07-27&quot; &quot;2016-07-28&quot;
-[3881] &quot;2016-07-29&quot; &quot;2016-08-01&quot; &quot;2016-08-02&quot; &quot;2016-08-03&quot; &quot;2016-08-04&quot;
-[3886] &quot;2016-08-05&quot; &quot;2016-08-08&quot; &quot;2016-08-09&quot; &quot;2016-08-10&quot; &quot;2016-08-11&quot;
-[3891] &quot;2016-08-12&quot; &quot;2016-08-15&quot; &quot;2016-08-16&quot; &quot;2016-08-17&quot; &quot;2016-08-18&quot;
-[3896] &quot;2016-08-19&quot; &quot;2016-08-22&quot; &quot;2016-08-23&quot; &quot;2016-08-24&quot; &quot;2016-08-25&quot;
-[3901] &quot;2016-08-26&quot; &quot;2016-08-29&quot; &quot;2016-08-30&quot; &quot;2016-08-31&quot; &quot;2016-09-01&quot;
-[3906] &quot;2016-09-02&quot; &quot;2016-09-05&quot; &quot;2016-09-06&quot; &quot;2016-09-07&quot; &quot;2016-09-08&quot;
-[3911] &quot;2016-09-09&quot; &quot;2016-09-12&quot; &quot;2016-09-13&quot; &quot;2016-09-14&quot; &quot;2016-09-15&quot;
-[3916] &quot;2016-09-16&quot; &quot;2016-09-19&quot; &quot;2016-09-20&quot; &quot;2016-09-21&quot; &quot;2016-09-22&quot;
-[3921] &quot;2016-09-23&quot; &quot;2016-09-26&quot; &quot;2016-09-27&quot; &quot;2016-09-28&quot; &quot;2016-09-29&quot;
-[3926] &quot;2016-09-30&quot; &quot;2016-10-03&quot; &quot;2016-10-04&quot; &quot;2016-10-05&quot; &quot;2016-10-06&quot;
-[3931] &quot;2016-10-07&quot; &quot;2016-10-10&quot; &quot;2016-10-11&quot; &quot;2016-10-12&quot; &quot;2016-10-13&quot;
-[3936] &quot;2016-10-14&quot; &quot;2016-10-17&quot; &quot;2016-10-18&quot; &quot;2016-10-19&quot; &quot;2016-10-20&quot;
-[3941] &quot;2016-10-21&quot; &quot;2016-10-24&quot; &quot;2016-10-25&quot; &quot;2016-10-26&quot; &quot;2016-10-27&quot;
-[3946] &quot;2016-10-28&quot; &quot;2016-10-31&quot; &quot;2016-11-01&quot; &quot;2016-11-02&quot; &quot;2016-11-03&quot;
-[3951] &quot;2016-11-07&quot; &quot;2016-11-08&quot; &quot;2016-11-09&quot; &quot;2016-11-10&quot; &quot;2016-11-11&quot;
-[3956] &quot;2016-11-14&quot; &quot;2016-11-15&quot; &quot;2016-11-16&quot; &quot;2016-11-17&quot; &quot;2016-11-18&quot;
-[3961] &quot;2016-11-21&quot; &quot;2016-11-22&quot; &quot;2016-11-23&quot; &quot;2016-11-24&quot; &quot;2016-11-25&quot;
-[3966] &quot;2016-11-28&quot; &quot;2016-11-29&quot; &quot;2016-11-30&quot; &quot;2016-12-01&quot; &quot;2016-12-02&quot;
-[3971] &quot;2016-12-05&quot; &quot;2016-12-06&quot; &quot;2016-12-07&quot; &quot;2016-12-08&quot; &quot;2016-12-09&quot;
-[3976] &quot;2016-12-12&quot; &quot;2016-12-13&quot; &quot;2016-12-14&quot; &quot;2016-12-15&quot; &quot;2016-12-16&quot;
-[3981] &quot;2016-12-19&quot; &quot;2016-12-20&quot; &quot;2016-12-21&quot; &quot;2016-12-22&quot; &quot;2016-12-23&quot;
-[3986] &quot;2016-12-26&quot; &quot;2016-12-27&quot; &quot;2016-12-28&quot; &quot;2016-12-29&quot; &quot;2016-12-30&quot;
-[3991] &quot;2017-01-03&quot; &quot;2017-01-04&quot; &quot;2017-01-05&quot; &quot;2017-01-06&quot; &quot;2017-01-09&quot;
-[3996] &quot;2017-01-10&quot; &quot;2017-01-11&quot; &quot;2017-01-12&quot; &quot;2017-01-13&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">index</span>(MICEX.rtn), v11,<span class="dt">type=</span><span class="st">&#39;l&#39;</span>, <span class="dt">xlab=</span> <span class="st">&#39;год&#39;</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-12-1.png" width="1152" style="display: block; margin: auto;" /></p>
+1.081732e-03 7.405187e-06 1.017658e-01 8.782626e-01 </code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">v11=<span class="kw">volatility</span>(garch11)*<span class="kw">sqrt</span>(<span class="dv">252</span>)*<span class="dv">100</span>
+<span class="kw">plot</span>(<span class="kw">index</span>(MICEX.rtn), v11,<span class="dt">type=</span><span class="st">&#39;l&#39;</span>, <span class="dt">xlab=</span> <span class="st">&#39;год&#39;</span>,<span class="dt">ylab=</span><span class="st">&#39;% год&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Оценка волатильности индекса ММВБ на основе GARCH(1,1) модели&#39;</span>) </code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-13-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Мы можем также использовать критерии AIC/BIC для выбора лучшей GARCH модели</p>
 </div>
-<div id="-----" class="slide section level2">
-<h1>Возможные варианты варианты для моделей доходностей</h1>
-<p>Мы используем только одну серию – серию фактических доходностей. Модель GARCH раскладывает эту серию на три части:</p>
+<div id="---" class="slide section level2">
+<h1>Варианты для моделей доходностей</h1>
+<p>Мы используем только одну серию для моделирования – серию фактических доходностей. Модель GARCH раскладывает эту серию на три части:</p>
 <ol style="list-style-type: decimal">
 <li>Среднее арифметическое доходности в момент <span class="math inline">\(t\)</span></li>
 <li>Условная дисперсия в момент времени <span class="math inline">\(t\)</span></li>
 <li>Шок в момент времени <span class="math inline">\(t\)</span>.</li>
 </ol>
-<p>Мы можем использовать разные подходы для оценки среднего доходностей:</p>
+<p>Мы можем использовать разные подходы для оценки среднего доходностей (часть 1):</p>
 <ul>
 <li>ноль</li>
 <li>константа (которую нужно оценить)</li>
@@ -1367,6 +620,7 @@ Information Criterion Statistics:
 <li>ARMA модель</li>
 <li>что-то другое.</li>
 </ul>
+<p>Спецификация модели GARCH позволяется определить каким образом, рассчитываются части 2 и 3.</p>
 </div>
 <div id="-garch11--arma-" class="slide section level2">
 <h1>Оценка GARCH(1,1) с ARMA-моделью</h1>
@@ -1385,18 +639,18 @@ AIC=-19738.33   AICc=-19738.29   BIC=-19687.98
 
 Training set error measures:
                        ME       RMSE        MAE  MPE MAPE      MASE
-Training set 4.283368e-06 0.02046884 0.01351751 -Inf  Inf 0.6975801
+Training set 4.283367e-06 0.02046884 0.01351751 -Inf  Inf 0.6975801
                      ACF1
-Training set 0.0007938902</code></pre>
+Training set 0.0007938903</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">garch_best &lt;-<span class="st"> </span><span class="kw">garchFit</span>(~<span class="st"> </span><span class="kw">arma</span>(<span class="dv">3</span>,<span class="dv">3</span>)+<span class="st"> </span><span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">1</span>), <span class="dt">data=</span>MICEX.rtn,
-                       <span class="dt">trace =</span> F,<span class="dt">include.mean=</span><span class="ot">TRUE</span>, <span class="dt">control=</span><span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">2000</span>))</code></pre></div>
+                       <span class="dt">trace =</span> F, <span class="dt">inclue.mean =</span> <span class="ot">TRUE</span>)</code></pre></div>
 <pre><code>Warning in arima(.series$x, order = c(u, 0, v), include.mean =
 include.mean): possible convergence problem: optim gave code = 1</code></pre>
-<p>Оптимизатор не смог найти значения коэффициентов.</p>
+<p>Предупреждение указывает на то, что оптимизатор не смог найти значения коэффициентов. Поэтому текущие значения коэффициентов не имеют большого смысла.</p>
 </div>
-<div id="-garch11-arma33---rugarch" class="slide section level2">
-<h1>Оценка GARCH(1,1) + ARMA(3,3) с помощью rugarch</h1>
-<p>попробуем использовать пакет <code>rugarch</code></p>
+<div id="-garch11-arma33-------rugarch" class="slide section level2">
+<h1>Оценка GARCH(1,1) + ARMA(3,3) для доходностей индекса ММВБ с помощью rugarch</h1>
+<p>попробуем использовать пакет <code>rugarch</code>. В этом пакете сначала необходимо создать объект, определяющиий тип оцениваемой модели, с помощью функции <code>ugarchspec</code>. Функция <code>ugarchfit</code> уже оценивает непосредственно модель. Для сложных моделей оценка может занимать определенное время.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(rugarch)
 spec =<span class="st"> </span><span class="kw">ugarchspec</span>(
                  <span class="dt">variance.model=</span><span class="kw">list</span>(<span class="dt">garchOrder=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>)),
@@ -1423,33 +677,33 @@ Distribution    : sged
 Optimal Parameters
 ------------------------------------
         Estimate  Std. Error   t value Pr(&gt;|t|)
-mu      0.000803    0.000206    3.8977 0.000097
-ar1    -0.538205    0.012767  -42.1569 0.000000
-ar2    -0.203096    0.014452  -14.0536 0.000000
-ar3     0.624051    0.010486   59.5115 0.000000
-ma1     0.529369    0.010903   48.5524 0.000000
-ma2     0.175352    0.003740   46.8835 0.000000
-ma3    -0.648821    0.000651 -996.1987 0.000000
-omega   0.000005    0.000002    2.5813 0.009843
-alpha1  0.087059    0.010060    8.6540 0.000000
-beta1   0.899913    0.011231   80.1296 0.000000
-skew    0.924345    0.018562   49.7969 0.000000
-shape   1.357369    0.039484   34.3777 0.000000
+mu      0.000803    0.000207    3.8773 0.000106
+ar1    -0.538690    0.012775  -42.1683 0.000000
+ar2    -0.203696    0.014406  -14.1400 0.000000
+ar3     0.623538    0.010499   59.3926 0.000000
+ma1     0.529880    0.010872   48.7392 0.000000
+ma2     0.175975    0.003731   47.1707 0.000000
+ma3    -0.648296    0.000671 -966.2439 0.000000
+omega   0.000005    0.000002    2.5811 0.009848
+alpha1  0.087095    0.010073    8.6466 0.000000
+beta1   0.899871    0.011243   80.0362 0.000000
+skew    0.924386    0.018568   49.7846 0.000000
+shape   1.357261    0.039480   34.3786 0.000000
 
 Robust Standard Errors:
         Estimate  Std. Error     t value Pr(&gt;|t|)
-mu      0.000803    0.000220     3.64091 0.000272
-ar1    -0.538205    0.008544   -62.99462 0.000000
-ar2    -0.203096    0.013417   -15.13728 0.000000
-ar3     0.624051    0.008227    75.85571 0.000000
-ma1     0.529369    0.010141    52.20328 0.000000
-ma2     0.175352    0.003786    46.31570 0.000000
-ma3    -0.648821    0.000448 -1449.69238 0.000000
-omega   0.000005    0.000005     0.97052 0.331788
-alpha1  0.087059    0.013169     6.61097 0.000000
-beta1   0.899913    0.020355    44.21167 0.000000
-skew    0.924345    0.019970    46.28569 0.000000
-shape   1.357369    0.059488    22.81751 0.000000
+mu      0.000803    0.000223     3.60396 0.000313
+ar1    -0.538690    0.008550   -63.00428 0.000000
+ar2    -0.203696    0.013324   -15.28748 0.000000
+ar3     0.623538    0.008231    75.75652 0.000000
+ma1     0.529880    0.010078    52.57929 0.000000
+ma2     0.175975    0.003771    46.66914 0.000000
+ma3    -0.648296    0.000457 -1418.93401 0.000000
+omega   0.000005    0.000005     0.97071 0.331691
+alpha1  0.087095    0.013188     6.60431 0.000000
+beta1   0.899871    0.020374    44.16675 0.000000
+skew    0.924386    0.019985    46.25354 0.000000
+shape   1.357261    0.059460    22.82645 0.000000
 
 LogLikelihood : 10861.35 
 
@@ -1464,43 +718,43 @@ Hannan-Quinn -5.4193
 Weighted Ljung-Box Test on Standardized Residuals
 ------------------------------------
                          statistic   p-value
-Lag[1]                       8.909 2.838e-03
-Lag[2*(p+q)+(p+q)-1][17]    14.454 2.776e-15
-Lag[4*(p+q)+(p+q)-1][29]    19.580 6.544e-02
+Lag[1]                        8.90 2.852e-03
+Lag[2*(p+q)+(p+q)-1][17]     14.44 3.331e-15
+Lag[4*(p+q)+(p+q)-1][29]     19.56 6.601e-02
 d.o.f=6
 H0 : No serial correlation
 
 Weighted Ljung-Box Test on Standardized Squared Residuals
 ------------------------------------
                         statistic p-value
-Lag[1]                     0.4832  0.4870
-Lag[2*(p+q)+(p+q)-1][5]    4.3804  0.2103
-Lag[4*(p+q)+(p+q)-1][9]    5.0220  0.4262
+Lag[1]                     0.4844  0.4864
+Lag[2*(p+q)+(p+q)-1][5]    4.3778  0.2105
+Lag[4*(p+q)+(p+q)-1][9]    5.0191  0.4266
 d.o.f=2
 
 Weighted ARCH LM Tests
 ------------------------------------
             Statistic Shape Scale P-Value
-ARCH Lag[3]    0.9655 0.500 2.000  0.3258
-ARCH Lag[5]    1.0277 1.440 1.667  0.7247
-ARCH Lag[7]    1.1238 2.315 1.543  0.8926
+ARCH Lag[3]    0.9643 0.500 2.000  0.3261
+ARCH Lag[5]    1.0267 1.440 1.667  0.7250
+ARCH Lag[7]    1.1229 2.315 1.543  0.8928
 
 Nyblom stability test
 ------------------------------------
-Joint Statistic:  3.8928
+Joint Statistic:  3.8896
 Individual Statistics:              
-mu     1.42370
-ar1    0.24554
-ar2    0.06518
-ar3    0.05605
-ma1    0.15797
-ma2    0.04396
-ma3    0.07275
-omega  0.40373
-alpha1 0.91078
-beta1  0.82298
-skew   0.41711
-shape  0.08619
+mu     1.42473
+ar1    0.24538
+ar2    0.06530
+ar3    0.05613
+ma1    0.15795
+ma2    0.04404
+ma3    0.07276
+omega  0.40502
+alpha1 0.91162
+beta1  0.82448
+skew   0.41769
+shape  0.08624
 
 Asymptotic Critical Values (10% 5% 1%)
 Joint Statistic:         2.69 2.96 3.51
@@ -1510,40 +764,55 @@ Sign Bias Test
 ------------------------------------
                    t-value    prob sig
 Sign Bias          0.97010 0.33206    
-Negative Sign Bias 0.01855 0.98520    
-Positive Sign Bias 1.40299 0.16070    
-Joint Effect       6.77374 0.07947   *
+Negative Sign Bias 0.01765 0.98592    
+Positive Sign Bias 1.40345 0.16056    
+Joint Effect       6.77386 0.07947   *
 
 
 Adjusted Pearson Goodness-of-Fit Test:
 ------------------------------------
   group statistic p-value(g-1)
-1    20     32.13      0.03020
-2    30     39.27      0.09665
-3    40     49.54      0.12011
-4    50     64.10      0.07242
+1    20     32.19      0.02973
+2    30     39.25      0.09693
+3    40     49.58      0.11934
+4    50     64.95      0.06306
 
 
-Elapsed time : 4.490249 </code></pre>
+Elapsed time : 4.941 </code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#plot(fit)</span>
 resid &lt;-<span class="st"> </span><span class="kw">residuals</span>(fit, <span class="dt">standardize =</span> <span class="ot">TRUE</span>)
 <span class="kw">Acf</span>(resid)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-14-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">Pacf</span>(resid)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-14-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">v33 &lt;-<span class="st"> </span><span class="kw">sqrt</span>(<span class="dv">252</span>) *<span class="st"> </span>fit@fit$sigma*<span class="dv">100</span>
+<span class="kw">head</span>(v33)</code></pre></div>
+<pre><code>[1] 32.54679 32.54679 32.54679 31.57646 39.90971 38.05993</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">sqrt</span>(<span class="dv">252</span>) *<span class="st"> </span>fit@fit$sigma, <span class="dt">type=</span><span class="st">&#39;l&#39;</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-14-3.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-3.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fit, <span class="dt">which =</span> <span class="dv">1</span>)</code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-14-4.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-4.png" width="1152" style="display: block; margin: auto;" /></p>
+</div>
+<div id="--garch---" class="slide section level2">
+<h1>Сравнение оценок GARCH разных моделей среднего</h1>
+<p>сравним оценку волатильности доходностей индекс ММВБ двух разных моделей:</p>
+<ol style="list-style-type: decimal">
+<li>GARCH(1,1) + константа для доходностей</li>
+<li>GARCH(1,1)+ARMA(3,3)</li>
+</ol>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">index</span>(MICEX.rtn),v11,<span class="dt">type=</span><span class="st">&quot;l&quot;</span>,<span class="dt">col=</span><span class="st">&quot;red&quot;</span>, <span class="dt">xlab=</span> <span class="st">&#39;год&#39;</span>, <span class="dt">ylab =</span> <span class="st">&#39;% ujl&#39;</span>)
+<span class="kw">lines</span>(<span class="kw">index</span>(MICEX.rtn),v33,<span class="dt">col=</span><span class="st">&quot;green&quot;</span>)</code></pre></div>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-16-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p>Оценки модели очень близки друг к другу.</p>
 </div>
 <div id="---garch" class="slide section level2">
 <h1>Прогнозирование с помощью GARCH</h1>
 <p>GARCH модели позволяют строить прогнозы исходной серии и прогнозы для волатильности:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fcst =<span class="st"> </span><span class="kw">ugarchforecast</span>(fit, <span class="dt">n.ahead=</span><span class="dv">10</span>)
 <span class="kw">plot</span>(fcst, <span class="dt">which =</span> <span class="dv">1</span>) <span class="co"># прогноз для ряда</span></code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-17-1.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fcst, <span class="dt">which =</span> <span class="dv">3</span>) <span class="co"># прогноз для волатильности</span></code></pre></div>
-<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<p><img src="lecture-6_files/figure-slidy/unnamed-chunk-17-2.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="-" class="slide section level2">
 <h1>Использованные источники:</h1>
