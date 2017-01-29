@@ -29,6 +29,13 @@ h1, h2, h3, h4, h5, h6 {
 strong {
   color: #003399;
 }
+table th {
+border-width: 1px;
+background-color: #e2e2e2;
+padding: 0 8px 0 8px;
+font-weight: bold;
+border-style: none;
+}
 .gdbar img {
   width: 150px !important;
   height: 150px !important;
