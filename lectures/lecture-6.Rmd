@@ -1,7 +1,7 @@
 ---
 title: 'ARCH/GARCH модели <br> "Количественные финансы" '
 author: "Салихов Марсель (marcel.salikhov@gmail.com)"
-date: "`r Sys.Date()`"
+date: "2017-01-17"
 output:
   slidy_presentation:
     css: styles.css
