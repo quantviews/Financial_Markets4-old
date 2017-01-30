@@ -48,12 +48,10 @@ code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Ann
 code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
   </style>
-  <link rel="stylesheet" type="text/css" media="screen, projection, print"
-    href="libs/Slidy2/styles/slidy.css" />
+  <link href="libs/slidy-2/styles/slidy.css" rel="stylesheet" />
+  <script src="libs/slidy-2/scripts/slidy.js"></script>
   <link rel="stylesheet" type="text/css" media="screen, projection, print"
    href="styles.css" />
-  <script src="libs/Slidy2/scripts/slidy.js"
-    charset="utf-8" type="text/javascript"></script>
 </head>
 <body>
 <div class="slide titlepage">
@@ -134,25 +132,27 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
     One Sample t-test
 
 data:  MICEX.rtn
-t = 2.1432, df = 3998, p-value = 0.03216
+t = 1.8344, df = 4249, p-value = 0.06666
 alternative hypothesis: true mean is not equal to 0
 95 percent confidence interval:
- 5.931611e-05 1.332710e-03
+ -0.0000409118  0.0012312515
 sample estimates:
    mean of x 
-0.0006960131 </code></pre>
+0.0005951699 </code></pre>
 <p>Cудя по t-тесту, мы отклоняем гипотезу о том, что среднее доходности равно 0.</p>
 </div>
 <div id="autoregressive-conditional-heteroskedastic-arch-" class="slide section level2">
 <h1>AutoRegressive Conditional Heteroskedastic (ARCH) модель</h1>
 <ul>
-<li>Мы знаем, что модели ARMA не позволяют моделировать CH-эффект. Однако почему не попробовать моделировать <strong>дисперсию</strong> серии с помощью модели ARMA? Это и есть базовый принцип ARCH.</li>
+<li>Мы знаем, что модели ARMA не позволяют моделировать CH-эффект. Однако почему не попробовать моделировать ** условную дисперсию** серии с помощью модели ARMA? Это и есть базовый принцип ARCH.</li>
 </ul>
 <p>Пусть временной ряд <span class="math inline">\({\epsilon_t}\)</span> имеет следующий вид:</p>
-<p><span class="math display">\[ \epsilon_t = \sigma_t w_t \]</span> где <span class="math inline">\(w_t\)</span> – белый шум с нулевым средним и единичной дисперсией, а часть <span class="math inline">\(\sigma_t^2\)</span> имеет вид:</p>
+<p><span class="math display">\[ \epsilon_t = \sigma_t w_t \]</span> где <span class="math inline">\(w_t\)</span> – белый шум с нулевым средним и единичной дисперсией (белый шум может иметь нормальное распределение, но это не обязательно, распределение может быть и иным).Часть <span class="math inline">\(\sigma_t\)</span> – условная дисперсия (<strong>conditional variance</strong>), она имеет вид:</p>
 <p><span class="math display">\[\sigma_t^2 = a_0 + a_1 \epsilon_{t-1}^2 \]</span> <span class="math inline">\(a_0\)</span> и <span class="math inline">\(a_1\)</span> – это параметры модели, которые необходимо оценить.</p>
+<p>Условная дисперсия ряда по определению равно <span class="math inline">\(\sigma_t^2 = Var(\epsilon_t | e_{t-1}, \ldots)\)</span> ;</p>
 <p>В этом случае ряд <span class="math inline">\({\epsilon_t}\)</span> является процессом ARCH(1). Можно записать модель в следующем виде:</p>
-<p><span class="math display">\[\epsilon_t = w_t \sqrt{a_0 + a_1 \epsilon_{t-1}^2} \]</span> <span class="math inline">\(a_0 &gt;0\)</span> и <span class="math inline">\(a_1 &gt; 0\)</span> для того, чтобы часть под корнем была больше 0. <span class="math inline">\(a_0 + a_1&lt;1\)</span> для того, чтобы ряд оставался стационарным с конечной дисперсией.</p>
+<p><span class="math display">\[\epsilon_t = w_t \sqrt{a_0 + a_1 \epsilon_{t-1}^2} \]</span> <span class="math inline">\(a_0 &gt;0\)</span> и <span class="math inline">\(a_1 &gt; 0\)</span> для того, чтобы часть под корнем была больше 0.</p>
+<p><span class="math inline">\(a_0 + a_1&lt;1\)</span> для того, чтобы ряд оставался стационарным с конечной дисперсией.</p>
 </div>
 <div id="-arch--" class="slide section level2">
 <h1>Почему ARCH моделирует волатильность?</h1>
@@ -228,7 +228,7 @@ md=<span class="kw">lm</span>(atsq~x)
     Box-Ljung test
 
 data:  y^2
-X-squared = 1405.7, df = 10, p-value &lt; 2.2e-16</code></pre>
+X-squared = 1452, df = 10, p-value &lt; 2.2e-16</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">archTest</span>(y,<span class="dv">12</span>) </code></pre></div>
 <pre><code>
 Call:
@@ -236,29 +236,29 @@ lm(formula = atsq ~ x)
 
 Residuals:
       Min        1Q    Median        3Q       Max 
--0.017239 -0.000241 -0.000107  0.000070  0.047522 
+-0.016831 -0.000253 -0.000115  0.000069  0.048325 
 
 Coefficients:
               Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  1.026e-04  2.683e-05   3.825 0.000133 ***
-x1           4.505e-02  1.583e-02   2.846 0.004454 ** 
-x2           3.754e-01  1.475e-02  25.453  &lt; 2e-16 ***
-x3           8.278e-02  1.589e-02   5.209 1.99e-07 ***
-x4          -1.323e-01  1.570e-02  -8.427  &lt; 2e-16 ***
-x5          -8.213e-04  1.583e-02  -0.052 0.958628    
-x6           2.905e-02  1.560e-02   1.861 0.062773 .  
-x7           1.681e-01  1.560e-02  10.775  &lt; 2e-16 ***
-x8           2.000e-02  1.583e-02   1.263 0.206527    
-x9          -1.772e-01  1.569e-02 -11.296  &lt; 2e-16 ***
-x10          4.330e-02  1.588e-02   2.726 0.006444 ** 
-x11          3.644e-01  1.475e-02  24.712  &lt; 2e-16 ***
-x12         -6.380e-02  1.581e-02  -4.035 5.57e-05 ***
+(Intercept)  1.107e-04  2.629e-05   4.211 2.60e-05 ***
+x1           4.571e-02  1.535e-02   2.978  0.00292 ** 
+x2           3.571e-01  1.439e-02  24.818  &lt; 2e-16 ***
+x3           7.927e-02  1.539e-02   5.152 2.69e-07 ***
+x4          -1.165e-01  1.523e-02  -7.648 2.52e-14 ***
+x5           7.674e-03  1.533e-02   0.501  0.61661    
+x6           2.338e-02  1.513e-02   1.545  0.12242    
+x7           1.552e-01  1.513e-02  10.257  &lt; 2e-16 ***
+x8           2.204e-02  1.531e-02   1.440  0.15005    
+x9          -1.613e-01  1.521e-02 -10.603  &lt; 2e-16 ***
+x10          4.769e-02  1.535e-02   3.107  0.00190 ** 
+x11          3.502e-01  1.436e-02  24.383  &lt; 2e-16 ***
+x12         -6.341e-02  1.530e-02  -4.144 3.48e-05 ***
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 
-Residual standard error: 0.001543 on 3974 degrees of freedom
-Multiple R-squared:  0.303, Adjusted R-squared:  0.3009 
-F-statistic:   144 on 12 and 3974 DF,  p-value: &lt; 2.2e-16</code></pre>
+Residual standard error: 0.001538 on 4225 degrees of freedom
+Multiple R-squared:  0.2869,    Adjusted R-squared:  0.2849 
+F-statistic: 141.6 on 12 and 4225 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>Оба теста указывают на присутствие ARCH-эффекта в серии</p>
 </div>
 <div id="--arch-" class="slide section level2">
@@ -328,7 +328,7 @@ Call:
 
 Mean and Variance Equation:
  data ~ 1 + garch(1, 0)
-&lt;environment: 0x00000000257349a0&gt;
+&lt;environment: 0x000000001708d520&gt;
  [data = MICEX.rtn]
 
 Conditional Distribution:
@@ -353,7 +353,7 @@ Log Likelihood:
  10663.13    normalized:  2.508971 
 
 Description:
- Tue Jan 17 12:02:38 2017 by user: Marcel 
+ Tue Jan 17 14:16:29 2017 by user: m_salihov 
 
 
 Standardised Residuals Tests:
@@ -397,7 +397,7 @@ Call:
 
 Mean and Variance Equation:
  data ~ 1 + garch(1, 0)
-&lt;environment: 0x000000002a2bff28&gt;
+&lt;environment: 0x0000000011e04978&gt;
  [data = MICEX.rtn]
 
 Conditional Distribution:
@@ -423,7 +423,7 @@ Log Likelihood:
  11074.94    normalized:  2.605869 
 
 Description:
- Tue Jan 17 12:02:39 2017 by user: Marcel 
+ Tue Jan 17 14:16:31 2017 by user: m_salihov 
 
 
 Standardised Residuals Tests:
@@ -552,7 +552,7 @@ Call:
 
 Mean and Variance Equation:
  data ~ 1 + garch(1, 1)
-&lt;environment: 0x000000002b0c2aa0&gt;
+&lt;environment: 0x0000000011296980&gt;
  [data = MICEX.rtn]
 
 Conditional Distribution:
@@ -578,7 +578,7 @@ Log Likelihood:
  11267.35    normalized:  2.651142 
 
 Description:
- Tue Jan 17 12:02:42 2017 by user: Marcel 
+ Tue Jan 17 14:16:33 2017 by user: m_salihov 
 
 
 Standardised Residuals Tests:
@@ -598,7 +598,7 @@ Information Criterion Statistics:
 -5.300402 -5.294421 -5.300403 -5.298288 </code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">coef</span>(garch11)</code></pre></div>
 <pre><code>          mu        omega       alpha1        beta1 
-1.039965e-03 6.735277e-06 1.000442e-01 8.836801e-01 </code></pre>
+1.039966e-03 6.735277e-06 1.000442e-01 8.836801e-01 </code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">v11=<span class="kw">volatility</span>(garch11)*<span class="kw">sqrt</span>(<span class="dv">252</span>)*<span class="dv">100</span>
 <span class="kw">plot</span>(<span class="kw">index</span>(MICEX.rtn), v11,<span class="dt">type=</span><span class="st">&#39;l&#39;</span>, <span class="dt">xlab=</span> <span class="st">&#39;год&#39;</span>,<span class="dt">ylab=</span><span class="st">&#39;% год&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Оценка волатильности индекса ММВБ на основе GARCH(1,1) модели&#39;</span>) </code></pre></div>
 <p><img src="lecture-6_files/figure-slidy/unnamed-chunk-13-1.png" width="1152" style="display: block; margin: auto;" /></p>
@@ -641,7 +641,7 @@ Training set error measures:
                         ME       RMSE        MAE MPE MAPE      MASE
 Training set -1.731055e-06 0.02108294 0.01404814 NaN  Inf 0.7039994
                       ACF1
-Training set -0.0002569635</code></pre>
+Training set -0.0002569637</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">garch_best &lt;-<span class="st"> </span><span class="kw">garchFit</span>(~<span class="st"> </span><span class="kw">arma</span>(<span class="dv">3</span>,<span class="dv">3</span>)+<span class="st"> </span><span class="kw">garch</span>(<span class="dv">1</span>,<span class="dv">1</span>), <span class="dt">data=</span>MICEX.rtn,
                        <span class="dt">trace =</span> F, <span class="dt">inclue.mean =</span> <span class="ot">TRUE</span>)</code></pre></div>
 <pre><code>Warning in arima(.series$x, order = c(u, 0, v), include.mean =
@@ -676,34 +676,34 @@ Distribution    : sged
 
 Optimal Parameters
 ------------------------------------
-        Estimate  Std. Error    t value Pr(&gt;|t|)
-mu      0.000760    0.000191   3.982931 0.000068
-ar1    -0.520277    0.034505 -15.078168 0.000000
-ar2     0.004646    0.133393   0.034833 0.972213
-ar3     0.263942    0.064794   4.073533 0.000046
-ma1     0.531402    0.034089  15.588516 0.000000
-ma2    -0.046132    0.129773  -0.355484 0.722227
-ma3    -0.295882    0.063723  -4.643265 0.000003
-omega   0.000004    0.000002   2.461208 0.013847
-alpha1  0.085412    0.010262   8.323493 0.000000
-beta1   0.904156    0.011206  80.682586 0.000000
-skew    0.925605    0.016992  54.472649 0.000000
-shape   1.368650    0.038319  35.717619 0.000000
+        Estimate  Std. Error   t value Pr(&gt;|t|)
+mu      0.000761    0.000189   4.02011 0.000058
+ar1    -0.515701    0.033874 -15.22413 0.000000
+ar2     0.005637    0.052377   0.10763 0.914288
+ar3     0.263324    0.058597   4.49382 0.000007
+ma1     0.526879    0.033474  15.73982 0.000000
+ma2    -0.047153    0.053818  -0.87616 0.380940
+ma3    -0.295119    0.057603  -5.12328 0.000000
+omega   0.000004    0.000002   2.46183 0.013823
+alpha1  0.085417    0.010231   8.34890 0.000000
+beta1   0.904155    0.011174  80.91337 0.000000
+skew    0.925635    0.016971  54.54225 0.000000
+shape   1.368671    0.038295  35.74009 0.000000
 
 Robust Standard Errors:
-        Estimate  Std. Error    t value Pr(&gt;|t|)
-mu      0.000760    0.000191   3.986689 0.000067
-ar1    -0.520277    0.007576 -68.672117 0.000000
-ar2     0.004646    0.082540   0.056294 0.955108
-ar3     0.263942    0.018711  14.105917 0.000000
-ma1     0.531402    0.006765  78.547060 0.000000
-ma2    -0.046132    0.074693  -0.617623 0.536824
-ma3    -0.295882    0.019524 -15.154600 0.000000
-omega   0.000004    0.000005   0.849792 0.395441
-alpha1  0.085412    0.017400   4.908643 0.000001
-beta1   0.904156    0.023724  38.111805 0.000000
-skew    0.925605    0.017775  52.074574 0.000000
-shape   1.368650    0.061745  22.166291 0.000000
+        Estimate  Std. Error   t value Pr(&gt;|t|)
+mu      0.000761    0.000186   4.08447 0.000044
+ar1    -0.515701    0.007367 -69.99780 0.000000
+ar2     0.005637    0.011945   0.47194 0.636969
+ar3     0.263324    0.015819  16.64639 0.000000
+ma1     0.526879    0.006663  79.08027 0.000000
+ma2    -0.047153    0.017232  -2.73632 0.006213
+ma3    -0.295119    0.017508 -16.85630 0.000000
+omega   0.000004    0.000005   0.85052 0.395035
+alpha1  0.085417    0.017290   4.94037 0.000001
+beta1   0.904155    0.023603  38.30714 0.000000
+skew    0.925635    0.017712  52.25971 0.000000
+shape   1.368671    0.061640  22.20409 0.000000
 
 LogLikelihood : 11388.17 
 
@@ -718,18 +718,18 @@ Hannan-Quinn -5.3472
 Weighted Ljung-Box Test on Standardized Residuals
 ------------------------------------
                          statistic  p-value
-Lag[1]                       6.736 0.009446
-Lag[2*(p+q)+(p+q)-1][17]    15.082 0.000000
-Lag[4*(p+q)+(p+q)-1][29]    20.279 0.043528
+Lag[1]                       6.721 0.009527
+Lag[2*(p+q)+(p+q)-1][17]    15.077 0.000000
+Lag[4*(p+q)+(p+q)-1][29]    20.274 0.043659
 d.o.f=6
 H0 : No serial correlation
 
 Weighted Ljung-Box Test on Standardized Squared Residuals
 ------------------------------------
                         statistic p-value
-Lag[1]                     0.1618  0.6875
-Lag[2*(p+q)+(p+q)-1][5]    4.0233  0.2512
-Lag[4*(p+q)+(p+q)-1][9]    4.6724  0.4791
+Lag[1]                      0.162  0.6873
+Lag[2*(p+q)+(p+q)-1][5]     4.021  0.2514
+Lag[4*(p+q)+(p+q)-1][9]     4.670  0.4794
 d.o.f=2
 
 Weighted ARCH LM Tests
@@ -737,24 +737,24 @@ Weighted ARCH LM Tests
             Statistic Shape Scale P-Value
 ARCH Lag[3]     1.032 0.500 2.000  0.3097
 ARCH Lag[5]     1.041 1.440 1.667  0.7207
-ARCH Lag[7]     1.155 2.315 1.543  0.8870
+ARCH Lag[7]     1.155 2.315 1.543  0.8871
 
 Nyblom stability test
 ------------------------------------
-Joint Statistic:  4.8168
+Joint Statistic:  4.8262
 Individual Statistics:              
-mu     1.16481
-ar1    0.48559
-ar2    0.03812
-ar3    0.05358
-ma1    0.46335
-ma2    0.04315
-ma3    0.05182
-omega  0.28483
-alpha1 1.00066
-beta1  0.93637
-skew   0.35864
-shape  0.10674
+mu     1.16335
+ar1    0.48891
+ar2    0.03752
+ar3    0.05288
+ma1    0.46686
+ma2    0.04248
+ma3    0.05123
+omega  0.28474
+alpha1 1.00237
+beta1  0.93812
+skew   0.35838
+shape  0.10665
 
 Asymptotic Critical Values (10% 5% 1%)
 Joint Statistic:         2.69 2.96 3.51
@@ -763,22 +763,22 @@ Individual Statistic:    0.35 0.47 0.75
 Sign Bias Test
 ------------------------------------
                    t-value    prob sig
-Sign Bias           1.0991 0.27178    
-Negative Sign Bias  0.1141 0.90917    
-Positive Sign Bias  1.2809 0.20029    
-Joint Effect        7.3004 0.06291   *
+Sign Bias           1.0993 0.27168    
+Negative Sign Bias  0.1132 0.90985    
+Positive Sign Bias  1.2811 0.20023    
+Joint Effect        7.3000 0.06293   *
 
 
 Adjusted Pearson Goodness-of-Fit Test:
 ------------------------------------
   group statistic p-value(g-1)
-1    20     28.32      0.07755
-2    30     41.48      0.06246
-3    40     60.25      0.01605
-4    50     54.02      0.28845
+1    20     29.07      0.06492
+2    30     41.52      0.06192
+3    40     61.12      0.01333
+4    50     54.87      0.26186
 
 
-Elapsed time : 3.796453 </code></pre>
+Elapsed time : 4.092 </code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#plot(fit)</span>
 resid &lt;-<span class="st"> </span><span class="kw">residuals</span>(fit, <span class="dt">standardize =</span> <span class="ot">TRUE</span>)
 <span class="kw">Acf</span>(resid)</code></pre></div>
@@ -787,7 +787,7 @@ resid &lt;-<span class="st"> </span><span class="kw">residuals</span>(fit, <span
 <p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-2.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">v33 &lt;-<span class="st"> </span><span class="kw">sqrt</span>(<span class="dv">252</span>) *<span class="st"> </span>fit@fit$sigma*<span class="dv">100</span>
 <span class="kw">head</span>(v33)</code></pre></div>
-<pre><code>[1] 33.50782 33.50782 33.50782 32.19122 31.05542 41.78035</code></pre>
+<pre><code>[1] 33.50780 33.50780 33.50780 32.19111 31.05571 41.78705</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">sqrt</span>(<span class="dv">252</span>) *<span class="st"> </span>fit@fit$sigma, <span class="dt">type=</span><span class="st">&#39;l&#39;</span>)</code></pre></div>
 <p><img src="lecture-6_files/figure-slidy/unnamed-chunk-15-3.png" width="1152" style="display: block; margin: auto;" /></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fit, <span class="dt">which =</span> <span class="dv">1</span>)</code></pre></div>
