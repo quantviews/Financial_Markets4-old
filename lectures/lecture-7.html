@@ -85,6 +85,16 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>Оптимальное распределение долей в портфеле – задача <strong>asset allocation</strong> – важный вопрос. Основная часть различий в риск/доходностях разных портфелей связаны именно с распределением долей, а не с различиями в доходностях отдельных активов.</li>
 </ul>
 </div>
+<div id="--harry-markowitz----" class="slide section level2">
+<h1>Гарри Марковиц (Harry Markowitz) – основатель современной портфельной теории</h1>
+<ul>
+<li><strong>Markowitz, H.M. (March 1952). “Portfolio Selection”. The Journal of Finance. 7 (1): 77–91</strong> – статья, которая заложила основы современной портфельной теории (modern portfolio theory).</li>
+<li>Идеи MPT по сути привели к созданию всей отрасли пассивного инвестирования. В настоящее время индексные фонды управляют триллионами долларов.</li>
+</ul>
+<div align="center">
+<p><img src="fig/harry-markowitz.jpg" width="850" height="565" /></p>
+</div>
+</div>
 <div id="-----" class="slide section level2">
 <h1>Корреляция и ковариация двух активов – пример</h1>
 <p>Пусть у нас есть акции компаний - А и Б. Доходность акций компании А имеет проциклический характер, то есть растет, когда экономика на подъеме.</p>
@@ -292,7 +302,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <ul>
 <li><strong>Ковариация</strong> позволяет определить, как изменяются доходности двух бумаг – в одном направлении (положительно), или в противоположных (отрицательно) направлениях.</li>
 </ul>
-<p><span class="math display">\[\sigma_{1,2} = (x_1 - E(X_1))(X_2 - E(X_2)) \]</span></p>
+<p><span class="math display">\[\sigma_{1,2} = \sum p_i (X_1 - E(X_1))(X_2 - E(X_2)) \]</span></p>
 <p><strong>Корреляция</strong> – нормированная на произведение стандартных доходностей ковариация.</p>
 <p><span class="math display">\[\rho = \frac{\sigma_{1,2}}{\sigma_1 \sigma_2} \]</span></p>
 </div>
@@ -559,18 +569,18 @@ sd_p2 &lt;-<span class="st"> </span><span class="kw">sqrt</span>(w^<span class="
 <p><img src="lecture-7_files/figure-slidy/unnamed-chunk-4-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="-----" class="slide section level2">
-<h1>Эффективнй портфель со множестом рисковых активов</h1>
+<h1>Эффективный портфель со множестом рисковых активов</h1>
 <ul>
 <li>В общем случае у нас может быть множество рисковых активов с разными характеристиками риск-доходности. В матричном виде это означает, что мы минимизируем следующее выражение:</li>
 </ul>
-<p><span class="math display">\[w^T \Sigma w - q R^Tw -&gt; min\]</span> где</p>
+<p><span class="math display">\[w^T \Sigma w - q R^Tw \rightarrow min\]</span> где</p>
 <ul>
 <li><span class="math inline">\(w\)</span> – вектор весов портфеля, такой что (<span class="math inline">\(\Sigma w_i = 1\)</span>)</li>
 <li><span class="math inline">\(\Sigma\)</span> – матрица ковариаций активов</li>
 <li><span class="math inline">\(q \geq 0\)</span> – фактор склонности к риску, такой что при q= 0 мы предпочитаем минимальный риск, при <span class="math inline">\(q -&gt; \infty\)</span> мы готовы идти на неограниченный риск.</li>
-<li><span class="math inline">\(R\)</span> - вектор доходностей активов</li>
-<li><span class="math inline">\(w^T \Sigma w\)</span> – вектор дисперсия доходностей портфеля</li>
-<li><span class="math inline">\(R^T\)</span> – ожидаем доходность портфеля.</li>
+<li><span class="math inline">\(R\)</span> – вектор доходностей активов</li>
+<li><span class="math inline">\(w^T \Sigma w\)</span> – дисперсия доходностей портфеля</li>
+<li><span class="math inline">\(R^T\)</span> – ожидаемая доходность портфеля.</li>
 </ul>
 <p>Мы можем использовать численные методы, чтобы найти оптимальные значения весов. Обычно используют методы <strong>квадратичного программирования</strong>, которые позволяют находить экстремумы квадратичных функций при заданных линейных ограничениях. В R можно использовать функцию <code>solve.QP</code> из пакета <code>quadprog</code>.</p>
 </div>
@@ -714,7 +724,8 @@ eff.optimal.point2 &lt;-<span class="st"> </span>eff2[eff2$sharpe==<span class="
 <ol style="list-style-type: decimal">
 <li>“Statistics and Data Analysis for Financial Engineering” (David Ruppert &amp; David Matteson)</li>
 <li>Analyzing Financial Data and Implementing Financial Models Using R (Clifford Ang).</li>
-<li>“Introduction to Modern Portfolio Theory” (<a href="http://economistatlarge.com/portfolio-theory/introduction-to-portfolio-theory" class="uri">http://economistatlarge.com/portfolio-theory/introduction-to-portfolio-theory</a>)</li>
+<li><a href="(http://economistatlarge.com/portfolio-theory/introduction-to-portfolio-theory)">“Introduction to Modern Portfolio Theory”</a></li>
+<li><a href="https://faculty.washington.edu/ezivot/econ424/portfoliofunctions.pdf">“Computing Efficient Portfolios”</a> (Eric Zivot)</li>
 </ol>
 </div>
 
