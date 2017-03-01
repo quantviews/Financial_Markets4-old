@@ -242,7 +242,7 @@ ES_nonp <span class="co"># непараметрическая оценка ES</s
 <p><span class="math display">\[\hat{VaR}^t = -S \times \{ \hat{\mu} + q_{\alpha,t} (\hat{\mu}) \hat{\sigma} \} \]</span> где <span class="math inline">\(\hat{\mu}, \hat{\sigma}, \hat{\mu}\)</span> – выборочные значения среднего, коэффициента масштаба (scale parameter), индекса степенй свободы (tail index), соответственно.</p>
 <p><span class="math inline">\(q_{\alpha,t} (\hat{\mu})\)</span> – <span class="math inline">\(\alpha\)</span>-квантиль распределения Стьюдента с заданным параметром <span class="math inline">\(\mu\)</span>.</p>
 <p>В нашем случае для доходностей индекса ММВБ:</p>
-<p><span class="math display">\[ \hat{\mu} = 0.0004702794, \hat{\sigma} = 0.0101840885, \hat{\mu} = 5.16 \]</span></p>
+<p><span class="math display">\[ \hat{\mu} = 0.0004702794, \hat{\sigma} = 0.0101840885, \hat{\nu} = 5.16 \]</span></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">n =<span class="st"> </span><span class="kw">nrow</span>(MICEX.rtn)
 alpha =<span class="st"> </span><span class="fl">0.05</span>
 <span class="kw">library</span>(MASS)
@@ -266,7 +266,7 @@ VaR_par</code></pre></div>
 <pre><code>[1] 28591.27</code></pre>
 <p>Параметрическая оценка VaR (19905) близка к непараметрической оценке (20366), но несколько меньшее ее. Параметрическая оценка ES = 28591, что меньше чем не-параметрическая оценка ES (31348). Это связано с тем, что наиболее левая часть распределения доходностей (90 из 1782 наблюдений) является более тяжелой по сравнению с распределением Стьюдента с df = 5.16</p>
 <p>Формула ES для распределения Стьюдента, используемая в расчете:</p>
-<p><span class="math display">\[\hat{ES}^t = S \times \{ -\mu + \sigma  \frac{f_{_\nu}F_{\nu}^{-1}(\alpha)}{\alpha}[\frac{\nu+\{F_{\nu}^{-1}(\alpha)\}^2\}{\nu-1} \} \]</span></p>
+<p><span class="math display">\[\hat{ES}^t = S \times \{ -\mu + \sigma  \frac{f_{_\nu}F_{\nu}^{-1}(\alpha)}{\alpha}[\frac{\nu+\{F_{\nu}^{-1}(\alpha)\}^2\}}{\nu-1}] \} \]</span></p>
 </div>
 <div id="----t-" class="slide section level2">
 <h1>График квантиль-квантиль для t-распределения</h1>
@@ -518,8 +518,7 @@ ES   -26975.78</code></pre>
 <li>Распределение Стьюдента часто используется в финансах из-за более тяжелых хвостов</li>
 <li>Величина df определяет, на сколько тяжелые хвосты. Чем меньше df, тем они более тяжелые.</li>
 </ul>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(threejs)
-<span class="kw">require</span>(mvtnorm)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(mvtnorm)
 <span class="kw">require</span>(mnormt)
 <span class="kw">require</span>(rgl)
 rtns2 &lt;-<span class="st"> </span>rtns[,<span class="dv">1</span>:<span class="dv">2</span>] <span class="co"># две бумаги - Газпром и Сбербанк</span>
@@ -556,10 +555,12 @@ col2 &lt;-<span class="st"> </span><span class="kw">heat.colors</span>(<span cla
 </div>
 <div id="-var--es-----r" class="slide section level2">
 <h1>Оценка VaR и ES для портфеля бумаг в R</h1>
-<p>Пусть у нас есть портфель из трех акций – Газпром, Сбербанк, ГМК Норникель. Стоимость портфеля = 1 млн рублей, распределенных равными долями. То есть доля каждой бумаги в портфеле равна 1/3</p>
+<p>+Пусть у нас есть портфель из трех акций – Газпром, Сбербанк, ГМК Норникель. + Стоимость портфеля = 1 млн рублей, распределенных равными долями. То есть доля каждой бумаги в портфеле равна 1/3 + Оценим VaR и ES для данного портфеля с допущением, что доходности бумаги имеют многомерное t-распределение.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(mnormt)
+alpha =<span class="st"> </span>.<span class="dv">05</span>
+
 rtns3 &lt;-<span class="st"> </span>rtns[,<span class="dv">1</span>:<span class="dv">3</span>]
-<span class="kw">cor</span>(rtns3)</code></pre></div>
+<span class="kw">cor</span>(rtns3) <span class="co"># матрица корреляций 3 бумаг</span></code></pre></div>
 <pre><code>          GAZP      SBER      GMKN
 GAZP 1.0000000 0.7454712 0.6419966
 SBER 0.7454712 1.0000000 0.5747359
@@ -571,12 +572,13 @@ loglik =<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0<
 
 <span class="co"># найдем параметр df, который максимизирует log-likelehood</span>
 for(i in <span class="dv">1</span>:n){
-  fit =<span class="st"> </span><span class="kw">cov.trob</span>(rtns3,<span class="dt">nu=</span>df)
+  fit =<span class="st"> </span><span class="kw">cov.trob</span>(rtns3,<span class="dt">nu=</span>df) <span class="co"># оценка матрицы ковариации для многомерного t-распределения</span>
   loglik[i] =<span class="st"> </span><span class="kw">sum</span>(<span class="kw">log</span>(<span class="kw">dmt</span>(rtns3,<span class="dt">mean=</span>fit$center,<span class="dt">S=</span>fit$cov,<span class="dt">df=</span>df[i])))
 }
 indicate =<span class="st"> </span>(<span class="dv">1</span>:<span class="kw">length</span>(df))[ (loglik==<span class="st"> </span><span class="kw">max</span>(loglik)) ]
 dfhat =<span class="st"> </span>df[indicate] <span class="co"># максизирующей LL значение df</span>
-estim =<span class="st"> </span><span class="kw">cov.trob</span>(rtns3,<span class="dt">nu=</span>dfhat,<span class="dt">cor=</span><span class="ot">TRUE</span>)
+
+estim =<span class="st"> </span><span class="kw">cov.trob</span>(rtns3,<span class="dt">nu=</span>dfhat,<span class="dt">cor=</span><span class="ot">TRUE</span>) <span class="co"># оценка матрицы ковариации для многомерного t-распределения</span>
 <span class="kw">options</span>(<span class="dt">digits=</span><span class="dv">3</span>)
 muhat =<span class="st"> </span>estim$center
 covhat =<span class="st"> </span>estim$cov
@@ -597,17 +599,16 @@ muP</code></pre></div>
 <pre><code>[1] 0.000216</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sdP</code></pre></div>
 <pre><code>[1] 0.014</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lambdaP =<span class="st"> </span><span class="kw">sqrt</span>((dfhat<span class="dv">-2</span>)/dfhat) *<span class="st"> </span>sdP <span class="co"># параметр лямбда для распределения Стьюдента</span>
-lambdaP</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sigmaP =<span class="st"> </span><span class="kw">sqrt</span>((dfhat<span class="dv">-2</span>)/dfhat) *<span class="st"> </span>sdP <span class="co"># параметр лямбда для распределения Стьюдента</span>
+sigmaP</code></pre></div>
 <pre><code>[1] 0.00899</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">alpha =<span class="st"> </span>.<span class="dv">05</span>
-VaR =<span class="st"> </span>-(muP +<span class="st"> </span>lambdaP*<span class="st"> </span><span class="kw">qt</span>(alpha,dfhat))
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">VaR =<span class="st"> </span>-(muP +<span class="st"> </span>sigmaP*<span class="st"> </span><span class="kw">qt</span>(alpha,dfhat))
 <span class="dv">10</span>^<span class="dv">6</span>*VaR</code></pre></div>
 <pre><code>[1] 19968</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">qalpha =<span class="st"> </span><span class="kw">qt</span>(alpha,<span class="dt">df=</span>dfhat)
 es1 =<span class="st"> </span><span class="kw">dt</span>(qalpha,<span class="dt">df=</span>dfhat)/(alpha)
 es2 =<span class="st"> </span>(dfhat +<span class="st"> </span>qalpha^<span class="dv">2</span>) /<span class="st"> </span>(dfhat -<span class="st"> </span><span class="dv">1</span>)
-es3 =<span class="st"> </span>-muP+lambdaP*es1*es2
+es3 =<span class="st"> </span>-muP+sigmaP*es1*es2
 ES_par =<span class="st"> </span><span class="dv">10</span>^<span class="dv">6</span>*es3
 ES_par</code></pre></div>
 <pre><code>[1] 31539</code></pre>
@@ -616,8 +617,8 @@ ES_par</code></pre></div>
 <h1>Список использованных источников</h1>
 <ol style="list-style-type: decimal">
 <li>“Statistics and Data Analysis for Financial Engineering” (David Ruppert &amp; David Matteson)</li>
-<li>Analyzing Financial Data and Implementing Financial Models Using R (Clifford Ang).</li>
-<li></li>
+<li>“Analyzing Financial Data and Implementing Financial Models” (Clifford Ang).</li>
+<li>“An Introduction to Analysis of Financial Data with R” (Ruey Tsay)</li>
 </ol>
 </div>
 
