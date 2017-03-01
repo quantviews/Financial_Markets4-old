@@ -8,3 +8,4 @@
 6. [ARCH/GARCH модели](lectures/lecture-6.html)
 7. [Оптмизация инвестиционных портфелей](lectures/lecture-7.html)
 8. [Модель CAPM](lectures/lecture-8.html)
+9. [Риск-менеджмент - VaR и ES](lectures/lecture-9.html)
