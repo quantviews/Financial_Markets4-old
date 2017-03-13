@@ -540,10 +540,10 @@ plot(param(ns_res))
 
 ## Трехмерное представление кривой доходности 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 require(rgl)
 plot((ns_res))
-rglwidget(width=800, heigh=600)  
+rglwidget(width=800, height=800)  
 ```
 
 

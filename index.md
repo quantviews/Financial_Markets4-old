@@ -9,3 +9,4 @@
 7. [Оптмизация инвестиционных портфелей](lectures/lecture-7.html)
 8. [Модель CAPM](lectures/lecture-8.html)
 9. [Риск-менеджмент - VaR и ES](lectures/lecture-9.html)
+10. [Процентные ставки и модели процентных ставок](lectures/lecture-10.html)
