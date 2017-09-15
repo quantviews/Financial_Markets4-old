@@ -7,16 +7,14 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Салихов Марсель (marcel.salikhov@gmail.com)" />
-  <meta name="date" content="2017-01-17" />
+  <meta name="date" content="2017-09-09" />
   <meta name="copyright" content="НИУ ВШЭ. Салихов Марсель (marcel.salikhov@gmail.com)"/>
   <title>Количественные финансы. Вводная лекция</title>
   <style type="text/css">code{white-space: pre;}</style>
-  <link rel="stylesheet" type="text/css" media="screen, projection, print"
-    href="libs/Slidy2/styles/slidy.css" />
+  <link href="libs/slidy-2/styles/slidy.css" rel="stylesheet" />
+  <script src="libs/slidy-2/scripts/slidy.js"></script>
   <link rel="stylesheet" type="text/css" media="screen, projection, print"
    href="styles.css" />
-  <script src="libs/Slidy2/scripts/slidy.js"
-    charset="utf-8" type="text/javascript"></script>
 </head>
 <body>
 <div class="slide titlepage">
@@ -24,28 +22,28 @@
   <p class="author">
 Салихов Марсель (<a href="mailto:marcel.salikhov@gmail.com">marcel.salikhov@gmail.com</a>)
   </p>
-  <p class="date">2017-01-17</p>
+  <p class="date">2017-09-09</p>
 </div>
 <div id="--" class="slide section level2">
 <h1>Введение в курс</h1>
 <ul>
-<li>Курс по выбору. Фокус – работа с финансовыми данными/построение моделей</li>
+<li>Курс по выбору. Фокус – работа с финансовыми данными/построение количественных моделей моделей</li>
 <li>Основная задача – научиться работать с данными, расширить понимание эконометрических методов в применении к финансам</li>
 <li>Семинарские занятия – работа с R</li>
 <li>Мы будем говорить как о теории, так и о практике. Оба аспекта важны.</li>
 <li>Отдельный фокус – работа с российскими данными</li>
-<li>Форма контроля – семинарские занятия (25%), эссе-задача (25%), финальный тест (50%).</li>
+<li>Форма контроля – семинарские занятия (50%), письменный экзамен – тест и задачи (50%).</li>
 </ul>
 </div>
 <div id="-" class="slide section level2">
 <h1>Структура курса</h1>
 <ol style="list-style-type: decimal">
 <li>Принципы финансов</li>
-<li>Финансовые данные и их количественный анализ</li>
+<li>Финансовые данные и первичный (исследовательский) количественный анализ</li>
 <li>Обработка и первичный анализ финансовых данных</li>
 <li>Линейные модели финансовых временных рядов</li>
 <li>Модель оценки стоимости капитала (CAPM)</li>
-<li>Риск и волатильность</li>
+<li>Риск и волатильность – модели VaR и Expected Shortfall (ES)</li>
 <li>Портфельная теория</li>
 <li>Модели процентных ставок</li>
 <li>Использование симуляционных моделей для оценки неопределенности</li>
@@ -65,7 +63,7 @@
 <div id="---" class="slide section level2">
 <h1>Зачем вообще изучать финансы?</h1>
 <ul>
-<li>Работа в финансовой сфере - банки, инвестиционные компании и проч.</li>
+<li>Работа в финансовой сфере – банки, инвестиционные компании, фонды и проч.</li>
 <li>Личные финансовые решения – всем придется с этим столкнуться. Необходимо понимать, как устроена финансовая система и учиться принимать рациональные финансовые решения.</li>
 <li>Финансы – это в первую очередь, работа с данными и цифрами. Эти навыки могут пригодиться и в других сферах</li>
 </ul>
@@ -214,6 +212,13 @@
 <p><span class="math display">\[ FV = PV + PV i = PV (1+i) \]</span></p>
 <p><span class="math display">\[ 1000 + 1000 (0.1) = 1100 \]</span></p>
 <p><span class="math display">\[ FV_n = PV  (1+i)^n \]</span></p>
+<!-- ## Пример. Будущая стоимость фиксированной суммы.  -->
+<!-- Пенсионный фонд оценивает, что корпоративный спонсор (вкладчик) фонда осуществит платеж в размере 100 млн рублей через 5 лет. Фонд планирует обеспечить доходность активов в размере 9%. Управляющему фондом также необходимо оценить будущую стоимость этого вклада через 15 лет -- к моменту времени, когда начнутся выплаты. Каковая эта будущая стоимость?  -->
+<!-- Оценим стоимость первоначальной инвестиции, в момент времени $t = 5$ -->
+<!-- $$PV = 100\:000\:000 $$  -->
+<!-- $$ r = 9% = 0.09 $$ -->
+<!-- $$ n = 10  $$ -->
+<!-- $$ FV_n = PV (1+r)^n = 10^8(1.09)^{10} = 10^8(2.3673764)= 236\:736\:367$$ -->
 </div>
 <div id="-" class="slide section level2">
 <h1>Капитализация процентов</h1>
@@ -250,8 +255,9 @@
 <h1>Сложные проценты не “в годах”</h1>
 <p>Формула работает для любых периодов, просто нужно, чтобы <span class="math inline">\(i\)</span> и <span class="math inline">\(n\)</span> имели одинаковую размерность! Необходимо трансформировать годовую ставку – в месячную.</p>
 <p>Пусть <span class="math inline">\(i^m\)</span> – процентная ставка в месяц, а n – количество месяцев.</p>
-<p>тогда итоговая сумма при ежемясчном начислении будет определяется как</p>
+<p>тогда итоговая сумма при ежемесячном начислении будет определяется как</p>
 <p><span class="math display">\[ (100) (1 + 0.1/12)^{12} = 110,47 \]</span></p>
+<p>За счет ежемесячного начисления процентов вы получаете дополнительно 0,47 рублей</p>
 </div>
 <div id="---ontinously-compounded-returns" class="slide section level2">
 <h1>Непрерывно начисляемые доходности (сontinously compounded returns)</h1>
@@ -306,8 +312,13 @@
 <h1>Непрерывно начисляемые доходности (сontinously compounded returns)</h1>
 <p><span class="math display">\[ 1105.517 = 1000  e^{0.1} \]</span></p>
 <p>Общая формула для непрерывного начисления</p>
-<p><span class="math display">\[ FV = PV  e^{r*n} \]</span></p>
-<p>сontinously compounded returns или лог-доходность</p>
+<p><span class="math display">\[ FV = PV e^{rn} \]</span> <span class="math display">\[ PV = \frac{FV}{e^{rn}}\]</span></p>
+</div>
+<div id="--" class="slide section level2">
+<h1>Лог-доходность активов</h1>
+<p>Если мы поменяем в предыдущей формуле <span class="math inline">\(PV\)</span> на стоимость актива в момент времени <span class="math inline">\(t\)</span> (<span class="math inline">\(P_t\)</span>) и зафиксируем единицу времени, тогда <span class="math inline">\(FV = P_{t+1}\)</span>, тогда</p>
+<p><span class="math display">\[e^{r_t} = \frac{P_{t+1}}{P_t} \]</span></p>
+<p>возьмем логарифм и получим сontinously compounded returns или лог-доходность актива:</p>
 <p><span class="math display">\[ r_t = ln \frac{P_t}{P_{t-1}} = log(P_t) - log(P_{t-1})  \]</span></p>
 <p>Лог-доходности примерно равны “обычным” доходностям при небольших значениях ставки, так как</p>
 <p><span class="math display">\[ log(1+x) \approx x \]</span></p>
@@ -454,7 +465,7 @@
     (function () {
       var script = document.createElement("script");
       script.type = "text/javascript";
-      script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
       document.getElementsByTagName("head")[0].appendChild(script);
     })();
   </script>

@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Салихов Марсель (marcel.salikhov@gmail.com)" />
-  <meta name="date" content="2017-01-17" />
+  <meta name="date" content="2017-09-08" />
   <meta name="copyright" content="НИУ ВШЭ. Салихов Марсель (marcel.salikhov@gmail.com)"/>
   <title>Количественные финансы. Введение в R</title>
   <style type="text/css">code{white-space: pre;}</style>
@@ -48,16 +48,18 @@ code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Ann
 code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
   </style>
-  <link rel="stylesheet" type="text/css" media="screen, projection, print"
-    href="libs/Slidy2/styles/slidy.css" />
+  <link href="libs/slidy-2/styles/slidy.css" rel="stylesheet" />
+  <script src="libs/slidy-2/scripts/slidy.js"></script>
+  <script src="libs/htmlwidgets-0.8/htmlwidgets.js"></script>
+  <link href="libs/plotlyjs-1.26.1/plotly-htmlwidgets.css" rel="stylesheet" />
+  <script src="libs/plotlyjs-1.26.1/plotly-latest.min.js"></script>
+  <script src="libs/plotly-binding-4.6.0/plotly.js"></script>
+  <script src="libs/jquery-1.11.3/jquery.min.js"></script>
+  <link href="libs/crosstalk-1.0.1/css/crosstalk.css" rel="stylesheet" />
+  <script src="libs/crosstalk-1.0.1/js/crosstalk.min.js"></script>
+  <script src="libs/typedarray-0.1/typedarray.min.js"></script>
   <link rel="stylesheet" type="text/css" media="screen, projection, print"
    href="styles.css" />
-  <script src="libs/htmlwidgets-0.7/htmlwidgets.js"></script>
-  <link href="libs/plotlyjs-1.16.3/plotly-htmlwidgets.css" rel="stylesheet" />
-  <script src="libs/plotlyjs-1.16.3/plotly-latest.min.js"></script>
-  <script src="libs/plotly-binding-4.5.2/plotly.js"></script>
-  <script src="libs/Slidy2/scripts/slidy.js"
-    charset="utf-8" type="text/javascript"></script>
 </head>
 <body>
 <div class="slide titlepage">
@@ -65,7 +67,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
   <p class="author">
 Салихов Марсель (<a href="mailto:marcel.salikhov@gmail.com">marcel.salikhov@gmail.com</a>)
   </p>
-  <p class="date">2017-01-17</p>
+  <p class="date">2017-09-08</p>
 </div>
 <div id="-" class="slide section level2">
 <h1>Цели лекции</h1>
@@ -88,21 +90,21 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>R – устоявшийся, достаточно простой и эффективный язык программирования.</li>
 <li>Выполнение аналитической задачи в форме кода имеет большие преимущества: проще автоматизировать выполнение сложных задач, проще находить ошибки, проще вспомнить потом, что же было сделано<br />
 </li>
-<li>Reproducible research – принцип проведения исследований в современном мире</li>
+<li><strong>Reproducible research</strong> – принцип проведения исследований в современном мире</li>
 <li>R имеет огромную экосистему дополнительного функционала (пакетов), которые расширяют базовые возможности. Практически все статистические методы, которые вы можете себе представить, имеют реализацию в R.</li>
 <li>R реализует один из лучших функционалов по построению графиков и визуалазиации данных.</li>
 </ul>
 <p>Этот график тоже построен в R</p>
-<div id="htmlwidget-31a4b2b9871443ddba0e" style="width:768px;height:576px;" class="plotly html-widget"></div>
-<script type="application/json" data-for="htmlwidget-31a4b2b9871443ddba0e">{"x":{"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"scene":{"zaxis":{"title":"z"}},"xaxis":{"domain":[0,1]},"yaxis":{"domain":[0,1]}},"config":{"modeBarButtonsToRemove":["sendDataToCloud"]},"base_url":"https://plot.ly","source":"A","data":[{"colorbar":{"title":"z<br>z2<br>z3","ticklen":2},"colorscale":[["0","rgba(68,1,84,1)"],["0.0236220472440947","rgba(69,11,91,1)"],["0.0511811023622043","rgba(71,22,100,1)"],["0.0669291338582677","rgba(71,27,105,1)"],["0.074803149606299","rgba(71,29,108,1)"],["0.0905511811023624","rgba(72,34,113,1)"],["0.103346456692913","rgba(72,38,117,1)"],["0.173228346456693","rgba(68,60,129,1)"],["0.333333333333332","rgba(49,104,142,1)"],["0.41732283464567","rgba(42,124,142,1)"],["0.444881889763779","rgba(38,130,142,1)"],["0.460629921259843","rgba(38,134,141,1)"],["0.468503937007874","rgba(38,136,141,1)"],["0.483103674540682","rgba(37,140,140,1)"],["0.496062992125984","rgba(37,143,140,1)"],["0.566929133858268","rgba(34,161,135,1)"],["0.666666666666663","rgba(53,183,121,1)"],["0.811023622047245","rgba(133,210,78,1)"],["0.836614173228347","rgba(149,214,69,1)"],["0.854330708661418","rgba(160,217,61,1)"],["0.862204724409449","rgba(165,218,58,1)"],["0.875492125984253","rgba(172,220,51,1)"],["0.889763779527559","rgba(181,222,44,1)"],["0.956528871391076","rgba(225,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"z":[[8.83,8.92,8.8,8.91,8.97,9.2],[8.89,8.93,8.82,8.95,8.97,9.23],[8.81,8.91,8.78,8.94,8.91,9.2],[8.87,8.79,8.91,8.74,9.09,8.99],[8.9,8.85,8.94,8.81,9.11,8.99],[8.87,8.79,8.92,8.76,9.11,8.98],[8.89,8.9,8.75,8.93,9.04,9.18],[8.94,8.94,8.78,8.98,9.08,9.2],[8.85,8.92,8.77,8.99,9.05,9.19],[8.94,8.79,8.91,8.89,9.25,8.93],[8.96,8.88,8.95,8.99,9.28,8.97],[8.92,8.81,8.92,8.92,9.27,8.97],[8.84,8.9,8.8,9.1,9,9.18],[8.9,8.95,8.8,9.13,9.01,9.2],[8.82,8.92,8.77,9.11,9,9.18]],"type":"surface"},{"colorbar":{"title":"z<br>z2<br>z3","ticklen":2},"colorscale":[["0","rgba(68,1,84,1)"],["0.0236220472440947","rgba(69,11,91,1)"],["0.0511811023622043","rgba(71,22,100,1)"],["0.0669291338582677","rgba(71,27,105,1)"],["0.074803149606299","rgba(71,29,108,1)"],["0.0905511811023624","rgba(72,34,113,1)"],["0.103346456692913","rgba(72,38,117,1)"],["0.173228346456693","rgba(68,60,129,1)"],["0.333333333333332","rgba(49,104,142,1)"],["0.41732283464567","rgba(42,124,142,1)"],["0.444881889763779","rgba(38,130,142,1)"],["0.460629921259843","rgba(38,134,141,1)"],["0.468503937007874","rgba(38,136,141,1)"],["0.483103674540682","rgba(37,140,140,1)"],["0.496062992125984","rgba(37,143,140,1)"],["0.566929133858268","rgba(34,161,135,1)"],["0.666666666666663","rgba(53,183,121,1)"],["0.811023622047245","rgba(133,210,78,1)"],["0.836614173228347","rgba(149,214,69,1)"],["0.854330708661418","rgba(160,217,61,1)"],["0.862204724409449","rgba(165,218,58,1)"],["0.875492125984253","rgba(172,220,51,1)"],["0.889763779527559","rgba(181,222,44,1)"],["0.956528871391076","rgba(225,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"z":[[9.83,9.92,9.8,9.91,9.97,10.2],[9.89,9.93,9.82,9.95,9.97,10.23],[9.81,9.91,9.78,9.94,9.91,10.2],[9.87,9.79,9.91,9.74,10.09,9.99],[9.9,9.85,9.94,9.81,10.11,9.99],[9.87,9.79,9.92,9.76,10.11,9.98],[9.89,9.9,9.75,9.93,10.04,10.18],[9.94,9.94,9.78,9.98,10.08,10.2],[9.85,9.92,9.77,9.99,10.05,10.19],[9.94,9.79,9.91,9.89,10.25,9.93],[9.96,9.88,9.95,9.99,10.28,9.97],[9.92,9.81,9.92,9.92,10.27,9.97],[9.84,9.9,9.8,10.1,10,10.18],[9.9,9.95,9.8,10.13,10.01,10.2],[9.82,9.92,9.77,10.11,10,10.18]],"type":"surface","opacity":0.98},{"colorbar":{"title":"z<br>z2<br>z3","ticklen":2},"colorscale":[["0","rgba(68,1,84,1)"],["0.0236220472440947","rgba(69,11,91,1)"],["0.0511811023622043","rgba(71,22,100,1)"],["0.0669291338582677","rgba(71,27,105,1)"],["0.074803149606299","rgba(71,29,108,1)"],["0.0905511811023624","rgba(72,34,113,1)"],["0.103346456692913","rgba(72,38,117,1)"],["0.173228346456693","rgba(68,60,129,1)"],["0.333333333333332","rgba(49,104,142,1)"],["0.41732283464567","rgba(42,124,142,1)"],["0.444881889763779","rgba(38,130,142,1)"],["0.460629921259843","rgba(38,134,141,1)"],["0.468503937007874","rgba(38,136,141,1)"],["0.483103674540682","rgba(37,140,140,1)"],["0.496062992125984","rgba(37,143,140,1)"],["0.566929133858268","rgba(34,161,135,1)"],["0.666666666666663","rgba(53,183,121,1)"],["0.811023622047245","rgba(133,210,78,1)"],["0.836614173228347","rgba(149,214,69,1)"],["0.854330708661418","rgba(160,217,61,1)"],["0.862204724409449","rgba(165,218,58,1)"],["0.875492125984253","rgba(172,220,51,1)"],["0.889763779527559","rgba(181,222,44,1)"],["0.956528871391076","rgba(225,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"z":[[7.83,7.92,7.8,7.91,7.97,8.2],[7.89,7.93,7.82,7.95,7.97,8.23],[7.81,7.91,7.78,7.94,7.91,8.2],[7.87,7.79,7.91,7.74,8.09,7.99],[7.9,7.85,7.94,7.81,8.11,7.99],[7.87,7.79,7.92,7.76,8.11,7.98],[7.89,7.9,7.75,7.93,8.04,8.18],[7.94,7.94,7.78,7.98,8.08,8.2],[7.85,7.92,7.77,7.99,8.05,8.19],[7.94,7.79,7.91,7.89,8.25,7.93],[7.96,7.88,7.95,7.99,8.28,7.97],[7.92,7.81,7.92,7.92,8.27,7.97],[7.84,7.9,7.8,8.1,8,8.18],[7.9,7.95,7.8,8.13,8.01,8.2],[7.82,7.92,7.77,8.11,8,8.18]],"type":"surface","opacity":0.98}]},"evals":[],"jsHooks":[]}</script>
+<div id="4f343d9d6f82" style="width:768px;height:576px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="4f343d9d6f82">{"x":{"visdat":{"4f3415736cd0":["function () ","plotlyVisDat"]},"cur_data":"4f3415736cd0","attrs":{"4f3415736cd0":{"showscale":false,"alpha":1,"sizes":[10,100],"z":{},"type":"surface"},"4f3415736cd0.1":{"showscale":false,"alpha":1,"sizes":[10,100],"z":{},"type":"surface","opacity":0.98},"4f3415736cd0.2":{"showscale":false,"alpha":1,"sizes":[10,100],"z":{},"type":"surface","opacity":0.98}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"scene":{"zaxis":{"title":"z"}},"xaxis":{"domain":[0,1]},"yaxis":{"domain":[0,1]},"hovermode":"closest","showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":[{"name":"Collaborate","icon":{"width":1000,"ascent":500,"descent":-50,"path":"M487 375c7-10 9-23 5-36l-79-259c-3-12-11-23-22-31-11-8-22-12-35-12l-263 0c-15 0-29 5-43 15-13 10-23 23-28 37-5 13-5 25-1 37 0 0 0 3 1 7 1 5 1 8 1 11 0 2 0 4-1 6 0 3-1 5-1 6 1 2 2 4 3 6 1 2 2 4 4 6 2 3 4 5 5 7 5 7 9 16 13 26 4 10 7 19 9 26 0 2 0 5 0 9-1 4-1 6 0 8 0 2 2 5 4 8 3 3 5 5 5 7 4 6 8 15 12 26 4 11 7 19 7 26 1 1 0 4 0 9-1 4-1 7 0 8 1 2 3 5 6 8 4 4 6 6 6 7 4 5 8 13 13 24 4 11 7 20 7 28 1 1 0 4 0 7-1 3-1 6-1 7 0 2 1 4 3 6 1 1 3 4 5 6 2 3 3 5 5 6 1 2 3 5 4 9 2 3 3 7 5 10 1 3 2 6 4 10 2 4 4 7 6 9 2 3 4 5 7 7 3 2 7 3 11 3 3 0 8 0 13-1l0-1c7 2 12 2 14 2l218 0c14 0 25-5 32-16 8-10 10-23 6-37l-79-259c-7-22-13-37-20-43-7-7-19-10-37-10l-248 0c-5 0-9-2-11-5-2-3-2-7 0-12 4-13 18-20 41-20l264 0c5 0 10 2 16 5 5 3 8 6 10 11l85 282c2 5 2 10 2 17 7-3 13-7 17-13z m-304 0c-1-3-1-5 0-7 1-1 3-2 6-2l174 0c2 0 4 1 7 2 2 2 4 4 5 7l6 18c0 3 0 5-1 7-1 1-3 2-6 2l-173 0c-3 0-5-1-8-2-2-2-4-4-4-7z m-24-73c-1-3-1-5 0-7 2-2 3-2 6-2l174 0c2 0 5 0 7 2 3 2 4 4 5 7l6 18c1 2 0 5-1 6-1 2-3 3-5 3l-174 0c-3 0-5-1-7-3-3-1-4-4-5-6z"},"click":"function(gd) { \n        // is this being viewed in RStudio?\n        if (location.search == '?viewer_pane=1') {\n          alert('To learn about plotly for collaboration, visit:\\n https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html');\n        } else {\n          window.open('https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html', '_blank');\n        }\n      }"}],"cloud":false},"data":[{"colorbar":{"title":"z<br />z2<br />z3","ticklen":2},"colorscale":[["0","rgba(68,1,84,1)"],["0.0236220472440947","rgba(69,11,91,1)"],["0.0511811023622043","rgba(71,22,100,1)"],["0.0669291338582677","rgba(71,27,105,1)"],["0.074803149606299","rgba(71,29,108,1)"],["0.0905511811023624","rgba(72,34,113,1)"],["0.103346456692913","rgba(72,38,117,1)"],["0.173228346456693","rgba(68,60,129,1)"],["0.333333333333332","rgba(49,104,142,1)"],["0.41732283464567","rgba(42,124,142,1)"],["0.444881889763779","rgba(38,130,142,1)"],["0.460629921259843","rgba(38,134,141,1)"],["0.468503937007874","rgba(38,136,141,1)"],["0.483103674540682","rgba(37,140,140,1)"],["0.496062992125984","rgba(37,143,140,1)"],["0.566929133858268","rgba(34,161,135,1)"],["0.666666666666663","rgba(53,183,121,1)"],["0.811023622047245","rgba(133,210,78,1)"],["0.836614173228347","rgba(149,214,69,1)"],["0.854330708661418","rgba(160,217,61,1)"],["0.862204724409449","rgba(165,218,58,1)"],["0.875492125984253","rgba(172,220,51,1)"],["0.889763779527559","rgba(181,222,44,1)"],["0.956528871391076","rgba(225,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"z":[[8.83,8.92,8.8,8.91,8.97,9.2],[8.89,8.93,8.82,8.95,8.97,9.23],[8.81,8.91,8.78,8.94,8.91,9.2],[8.87,8.79,8.91,8.74,9.09,8.99],[8.9,8.85,8.94,8.81,9.11,8.99],[8.87,8.79,8.92,8.76,9.11,8.98],[8.89,8.9,8.75,8.93,9.04,9.18],[8.94,8.94,8.78,8.98,9.08,9.2],[8.85,8.92,8.77,8.99,9.05,9.19],[8.94,8.79,8.91,8.89,9.25,8.93],[8.96,8.88,8.95,8.99,9.28,8.97],[8.92,8.81,8.92,8.92,9.27,8.97],[8.84,8.9,8.8,9.1,9,9.18],[8.9,8.95,8.8,9.13,9.01,9.2],[8.82,8.92,8.77,9.11,9,9.18]],"type":"surface","frame":null},{"colorbar":{"title":"z<br />z2<br />z3","ticklen":2},"colorscale":[["0","rgba(68,1,84,1)"],["0.0236220472440947","rgba(69,11,91,1)"],["0.0511811023622043","rgba(71,22,100,1)"],["0.0669291338582677","rgba(71,27,105,1)"],["0.074803149606299","rgba(71,29,108,1)"],["0.0905511811023624","rgba(72,34,113,1)"],["0.103346456692913","rgba(72,38,117,1)"],["0.173228346456693","rgba(68,60,129,1)"],["0.333333333333332","rgba(49,104,142,1)"],["0.41732283464567","rgba(42,124,142,1)"],["0.444881889763779","rgba(38,130,142,1)"],["0.460629921259843","rgba(38,134,141,1)"],["0.468503937007874","rgba(38,136,141,1)"],["0.483103674540682","rgba(37,140,140,1)"],["0.496062992125984","rgba(37,143,140,1)"],["0.566929133858268","rgba(34,161,135,1)"],["0.666666666666663","rgba(53,183,121,1)"],["0.811023622047245","rgba(133,210,78,1)"],["0.836614173228347","rgba(149,214,69,1)"],["0.854330708661418","rgba(160,217,61,1)"],["0.862204724409449","rgba(165,218,58,1)"],["0.875492125984253","rgba(172,220,51,1)"],["0.889763779527559","rgba(181,222,44,1)"],["0.956528871391076","rgba(225,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"z":[[9.83,9.92,9.8,9.91,9.97,10.2],[9.89,9.93,9.82,9.95,9.97,10.23],[9.81,9.91,9.78,9.94,9.91,10.2],[9.87,9.79,9.91,9.74,10.09,9.99],[9.9,9.85,9.94,9.81,10.11,9.99],[9.87,9.79,9.92,9.76,10.11,9.98],[9.89,9.9,9.75,9.93,10.04,10.18],[9.94,9.94,9.78,9.98,10.08,10.2],[9.85,9.92,9.77,9.99,10.05,10.19],[9.94,9.79,9.91,9.89,10.25,9.93],[9.96,9.88,9.95,9.99,10.28,9.97],[9.92,9.81,9.92,9.92,10.27,9.97],[9.84,9.9,9.8,10.1,10,10.18],[9.9,9.95,9.8,10.13,10.01,10.2],[9.82,9.92,9.77,10.11,10,10.18]],"type":"surface","opacity":0.98,"frame":null},{"colorbar":{"title":"z<br />z2<br />z3","ticklen":2},"colorscale":[["0","rgba(68,1,84,1)"],["0.0236220472440947","rgba(69,11,91,1)"],["0.0511811023622043","rgba(71,22,100,1)"],["0.0669291338582677","rgba(71,27,105,1)"],["0.074803149606299","rgba(71,29,108,1)"],["0.0905511811023624","rgba(72,34,113,1)"],["0.103346456692913","rgba(72,38,117,1)"],["0.173228346456693","rgba(68,60,129,1)"],["0.333333333333332","rgba(49,104,142,1)"],["0.41732283464567","rgba(42,124,142,1)"],["0.444881889763779","rgba(38,130,142,1)"],["0.460629921259843","rgba(38,134,141,1)"],["0.468503937007874","rgba(38,136,141,1)"],["0.483103674540682","rgba(37,140,140,1)"],["0.496062992125984","rgba(37,143,140,1)"],["0.566929133858268","rgba(34,161,135,1)"],["0.666666666666663","rgba(53,183,121,1)"],["0.811023622047245","rgba(133,210,78,1)"],["0.836614173228347","rgba(149,214,69,1)"],["0.854330708661418","rgba(160,217,61,1)"],["0.862204724409449","rgba(165,218,58,1)"],["0.875492125984253","rgba(172,220,51,1)"],["0.889763779527559","rgba(181,222,44,1)"],["0.956528871391076","rgba(225,228,40,1)"],["1","rgba(253,231,37,1)"]],"showscale":false,"z":[[7.83,7.92,7.8,7.91,7.97,8.2],[7.89,7.93,7.82,7.95,7.97,8.23],[7.81,7.91,7.78,7.94,7.91,8.2],[7.87,7.79,7.91,7.74,8.09,7.99],[7.9,7.85,7.94,7.81,8.11,7.99],[7.87,7.79,7.92,7.76,8.11,7.98],[7.89,7.9,7.75,7.93,8.04,8.18],[7.94,7.94,7.78,7.98,8.08,8.2],[7.85,7.92,7.77,7.99,8.05,8.19],[7.94,7.79,7.91,7.89,8.25,7.93],[7.96,7.88,7.95,7.99,8.28,7.97],[7.92,7.81,7.92,7.92,8.27,7.97],[7.84,7.9,7.8,8.1,8,8.18],[7.9,7.95,7.8,8.13,8.01,8.2],[7.82,7.92,7.77,8.11,8,8.18]],"type":"surface","opacity":0.98,"frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1}},"base_url":"https://plot.ly"},"evals":["config.modeBarButtonsToAdd.0.click"],"jsHooks":{"render":[{"code":"function(el, x) { var ctConfig = crosstalk.var('plotlyCrosstalkOpts').set({\"on\":\"plotly_click\",\"persistent\":false,\"dynamic\":false,\"selectize\":false,\"opacityDim\":0.2,\"selected\":{\"opacity\":1}}); }","data":null}]}}</script>
 </div>
 <div id="-r" class="slide section level2">
 <h1>Ограничения R</h1>
 <ul>
-<li>Кривая обучения – печатать команды в текстовом виде, а не выполнять манипуляции мышью может показаться не очень удобным.</li>
+<li>Кривая обучения – печатать команды в текстовом виде, а не выполнять манипуляции мышью с начала может показаться не очень удобным.</li>
 <li>Многие задачи в R могут выполняться разными способами, разными функциями – это запутывает.</li>
-<li>R все данные хранит в оперативной памяти. Объем данных для анализа ограничен памятью.</li>
-<li>R не очень хорошо подходит для высокоскоростных вычислений в промышленном использовании.</li>
+<li>R все данные хранит в оперативной памяти. Объем данных для анализа ограничен памятью. Это ограничивает разработки очень Больших моделей.</li>
+<li>R не очень хорошо подходит для высокоскоростных вычислений в промышленном использовании или для решения очень больших задач.</li>
 </ul>
 </div>
 <div id="r--excel" class="slide section level2">
@@ -110,25 +112,45 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <ul>
 <li>Каждый инструмент – для своих задач. Надо уметь работать с разными инструментами для того, чтобы решать поставленную задачу опимальным образом.<br />
 </li>
-<li>Excel – стандарт для выполнения простых и гибких задач. Если вам необходимо “посмотреть” на данные и “потрогать” их, то Excel – лучший вариант.</li>
-<li>Excel хорошо подходит для построения относительно несложных моделей.</li>
+<li>Excel – по сути отраслевой стандарт для выполнения простых и гибких задач. Если вам необходимо “посмотреть” на данные и “потрогать” их, то Excel – лучший вариант.</li>
+<li>Excel хорошо подходит для построения относительно несложных количественных моделей, так как вы наглядно видите, что происходит.</li>
+<li>Мы иногда будем использовать Excel для того, чтобы лучше понять суть метода.</li>
 </ul>
 <p>НО:</p>
 <ul>
-<li>Excel не дает работать с данными, даже относительно небольшими по современным стандартам. Попробуйте открыть в Excel файл, который содержит 100 тыс. строк и поработать с ним.</li>
+<li>Excel не дает работать с данными, даже относительно небольшими по современным стандартам. Попробуйте открыть в Excel файл, который содержит 100 тыс. строк и поработать с ним!</li>
 <li>В Excel можно строить сложные модели (и многие это делают!), но в таких моделях сложно найти ошибки (ошибки неизбежны) и поддерживать модели их. Известные примеры – данные Reinhart &amp; Rogoff, риск-менеджмент в JP Morgan.</li>
 <li>Excel по сути не поддерживает статистические вычисления и операции, кроме самых базовых<br />
 </li>
 <li>В Excel сложно и неоптимально работать с финансовыми данными.</li>
 </ul>
 </div>
+<div id="rpythonmatlab" class="slide section level2">
+<h1>R/Python/Matlab</h1>
+<ul>
+<li>Существует еще несколько альтернатив R, которые достаточно широко используются на практике.</li>
+<li><strong>Python</strong> – универсальный язык программирования, который также широко используется в количественных финансах. Python имеет одни из наиболее развитых и производительных библиотек для машинного обучения, но “отстает” в части статистических методов и пакетов. Производительность R и Python сопоставимы между собой, но Python имеет более удобные средства для оптимизации Python, как правило, имеет более “лаконичный” синтаксис по сравнению с R</li>
+<li><strong>Matlab</strong> – пакет прикладных программ для вычислений и язык программирования, разработанный компанией MathWorks. Преимущества – широкое распространение в отдельных отраслях науки/технологий, высокая скорость работы. Недостатки – достаточно запутанный синтаксис, коммерческий характер продукта, относительно низкая популярность по сравнению с R/Python.</li>
+<li>Необходимо выбирать средства под решаемую задачу, сам по себе выбор конкретного инструментария не так важен.</li>
+</ul>
+</div>
 <div id="-r" class="slide section level2">
 <h1>Установка R</h1>
 <ol style="list-style-type: decimal">
 <li>Зайти на <a href="https://cran.r-project.org/">CRAN</a> и установить R</li>
-<li>Зайти на <a href="https://www.rstudio.com/">RStudio</a> и установить R Studio – более удобный и совершенный графический редактор для R</li>
+<li>Зайти на <a href="https://www.rstudio.com/">RStudio</a> и установить R Studio – более удобный и совершенный редактор (IDE) для R.</li>
 </ol>
-<p>R можно установить и на Windows, на Mac OS – разницы в функционале не будет. Для того, чтобы устанавливать пакеты необходимо иметь права администратора</p>
+<p>R можно установить и на Windows/Mac OS/ Unix – разницы в функционале не будет. + Для того, чтобы устанавливать пакеты необходимо иметь права администратора. + Не устанавливайте R в свою рабочую папку, в особенности, если вы используете имя пользователя на кириллице (для Windows)</p>
+</div>
+<div id="-r" class="slide section level2">
+<h1>Изучение R</h1>
+<ul>
+<li>для выполнения лабораторных работ я буду предоставлять базовый код для выполнения задачи и облегчу для вас ее выполнение. Вам не надо будет писать его с нуля.</li>
+<li>НО ваша задача - 1) модифицировать код для вашего тикера/компании, которая будет назначена вам случайным образом 2) проинтепретировать полученные результаты с содержательной точки зрения. К примеру, ваша модель значима или нет? как ее можно модифицивать? что показывают статистические тесты?</li>
+<li>Вы можете дополнительно изучать R для того, чтобы лучше освоить задачи этого курса, а также использовать эти знания в будущем.</li>
+<li>Помощь по любой команде – ?название команды в консоли (к примеру, ?type)</li>
+<li>Увидеть подсказку по аргументу функции: название_функции() + скобки + Tab</li>
+</ul>
 </div>
 <div id="--r" class="slide section level2">
 <h1>Комманды в R</h1>
@@ -157,16 +179,25 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </div>
 <div id="-" class="slide section level2">
 <h1>Типы данных</h1>
-<p>Все в R – объекты. Объекты могут быть разных типов и классов. Узнать тип объекта можно с помощью команды <code>type</code>, класс объекта – командой <code>class</code>. R оперирует именованными структурами данным. Каждый объект имеет свое имя. Числа могут быть разных типов.</p>
+<p>Всё в R – <strong>объекты</strong>. Объекты могут быть разных <strong>типов</strong> и <strong>классов</strong>. Узнать тип объекта можно с помощью команды <code>type</code>, класс объекта – командой <code>class</code>. R оперирует именованными структурами данным. Каждый объект имеет свое <strong>имя</strong>. Числа могут быть разных типов.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="dv">2</span>^<span class="dv">10</span></code></pre></div>
 <pre><code>## [1] 1024</code></pre>
 <p>Ими могут быть, десятичные числа. Они называются <code>numeric</code></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="fl">10.5</span>       <span class="co"># присвоить переменной x значение 10.5</span>
 x              <span class="co"># вывести значение x</span></code></pre></div>
 <pre><code>## [1] 10.5</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">class</span>(x)       <span class="co"># тип переменной х </span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">class</span>(x)       <span class="co"># класс переменной х </span></code></pre></div>
 <pre><code>## [1] &quot;numeric&quot;</code></pre>
-<p>Команды <code>=</code> и <code>&lt;-</code> идентичны и означают “присвоить значение” ## Целые числа</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">typeof</span>(x)      <span class="co"># тип переменной X  </span></code></pre></div>
+<pre><code>## [1] &quot;double&quot;</code></pre>
+<p>Команды <code>=</code> и <code>&lt;-</code> идентичны и означают “присвоить значение”</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x =<span class="st"> </span><span class="dv">5</span> 
+x =<span class="st"> </span>x +<span class="dv">5</span> 
+x </code></pre></div>
+<pre><code>## [1] 10</code></pre>
+</div>
+<div id="-" class="slide section level2">
+<h1>Целые числа</h1>
 <p>Тип <code>ingeger</code></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x =<span class="st"> </span><span class="kw">as.integer</span>(<span class="dv">3</span>)       <span class="co"># присвоить переменной x значение 3</span>
 x              <span class="co"># вывести значение x</span></code></pre></div>
@@ -206,7 +237,7 @@ y =<span class="st"> &#39;1&#39;</span> <span class="co"># присвоить y 
 </div>
 <div id="-na" class="slide section level2">
 <h1>Тип NA</h1>
-<p>Специальный тип для обозначения пропущенных данных (missing value)</p>
+<p>Специальный тип для обозначения <strong>пропущенных данных</strong> (missing value)</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="ot">NA</span> 
 <span class="kw">is.na</span>(x)</code></pre></div>
 <pre><code>## [1] TRUE</code></pre>
@@ -252,7 +283,8 @@ s[<span class="dv">3</span>] </code></pre></div>
 <div id="-" class="slide section level2">
 <h1>Векторизация операций</h1>
 <ul>
-<li>Преимущество R – так называемая векторизация операций. Это означает, что вы можете осущесвлять операции над векторами, точно так же как и над отдельными числами.</li>
+<li>Преимущество R – так называемая <strong>векторизация операций</strong>. Это означает, что вы можете осущесвлять операции над векторами, точно так же как и над отдельными числами.</li>
+<li>Векторизация обеспечивает скорость, а также избавляет от необходимости писать циклы for</li>
 <li>На самом деле любой единичный объект – это вектор с длиной 1</li>
 </ul>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">a </code></pre></div>
@@ -390,21 +422,21 @@ L</code></pre></div>
 </div>
 <div id="-date" class="slide section level2">
 <h1>Тип Date</h1>
-<p>Тип <code>Date</code> представляет календарные даты. Финансовые серии как правило представляют собой</p>
+<p>Тип <code>Date</code> представляет календарные даты. Финансовые серии как правило представляют собой временный ряд, упорядоченный во времени.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">date</span>()</code></pre></div>
-<pre><code>## [1] &quot;Tue Jan 17 12:13:28 2017&quot;</code></pre>
+<pre><code>## [1] &quot;Fri Sep 08 16:29:43 2017&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">today &lt;-<span class="st"> </span><span class="kw">Sys.Date</span>()
 today</code></pre></div>
-<pre><code>## [1] &quot;2017-01-17&quot;</code></pre>
+<pre><code>## [1] &quot;2017-09-08&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">format</span>(today, <span class="st">&quot;%d %b %Y&quot;</span>)  <span class="co"># with month as a word</span></code></pre></div>
-<pre><code>## [1] &quot;17 янв 2017&quot;</code></pre>
+<pre><code>## [1] &quot;08 сен 2017&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">seq</span>(today, <span class="dt">length.out=</span><span class="dv">10</span>, <span class="dt">by=</span><span class="st">&quot;1 week&quot;</span>)</code></pre></div>
-<pre><code>##  [1] &quot;2017-01-17&quot; &quot;2017-01-24&quot; &quot;2017-01-31&quot; &quot;2017-02-07&quot; &quot;2017-02-14&quot;
-##  [6] &quot;2017-02-21&quot; &quot;2017-02-28&quot; &quot;2017-03-07&quot; &quot;2017-03-14&quot; &quot;2017-03-21&quot;</code></pre>
+<pre><code>##  [1] &quot;2017-09-08&quot; &quot;2017-09-15&quot; &quot;2017-09-22&quot; &quot;2017-09-29&quot; &quot;2017-10-06&quot;
+##  [6] &quot;2017-10-13&quot; &quot;2017-10-20&quot; &quot;2017-10-27&quot; &quot;2017-11-03&quot; &quot;2017-11-10&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">weekdays</span>(today)</code></pre></div>
-<pre><code>## [1] &quot;вторник&quot;</code></pre>
+<pre><code>## [1] &quot;пятница&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">months</span>(today)</code></pre></div>
-<pre><code>## [1] &quot;Январь&quot;</code></pre>
+<pre><code>## [1] &quot;Сентябрь&quot;</code></pre>
 <p>можно делать конвертацию между типами <code>character</code> и <code>Date</code> c помощью функций <code>as.Date</code> и <code>as.character</code></p>
 </div>
 <div id="-xts--" class="slide section level2">
@@ -434,16 +466,16 @@ df_xts &lt;-<span class="st"> </span><span class="kw">as.xts</span>(<span class=
 ##  $ important: chr &quot;very important info!&quot;</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">xts</span>(<span class="dv">1</span>:<span class="dv">10</span>, <span class="kw">Sys.Date</span>()+<span class="dv">1</span>:<span class="dv">10</span>)</code></pre></div>
 <pre><code>##            [,1]
-## 2017-01-18    1
-## 2017-01-19    2
-## 2017-01-20    3
-## 2017-01-21    4
-## 2017-01-22    5
-## 2017-01-23    6
-## 2017-01-24    7
-## 2017-01-25    8
-## 2017-01-26    9
-## 2017-01-27   10</code></pre>
+## 2017-09-09    1
+## 2017-09-10    2
+## 2017-09-11    3
+## 2017-09-12    4
+## 2017-09-13    5
+## 2017-09-14    6
+## 2017-09-15    7
+## 2017-09-16    8
+## 2017-09-17    9
+## 2017-09-18   10</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(<span class="kw">index</span>(df_xts))</code></pre></div>
 <pre><code>## [1] &quot;2007-01-02 MSK&quot; &quot;2007-01-03 MSK&quot; &quot;2007-01-04 MSK&quot; &quot;2007-01-05 MSK&quot;
 ## [5] &quot;2007-01-06 MSK&quot; &quot;2007-01-07 MSK&quot;</code></pre>
@@ -455,7 +487,7 @@ df_xts &lt;-<span class="st"> </span><span class="kw">as.xts</span>(<span class=
 ## [4,] 50.37347 50.37347 50.22103 50.33459
 ## [5,] 50.24433 50.24433 50.11121 50.18112
 ## [6,] 50.13211 50.21561 49.99185 49.99185</code></pre>
-<p>основное удобство работы с объектами типа <code>xts</code> удобные способы получать подмножества исходного множества:</p>
+<p>основное удобство работы с объектами типа <code>xts</code> – удобные способы получать срезы исходных данных:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df_xts[<span class="st">&#39;2007-01-06&#39;</span>] <span class="co"># отдельная дата </span></code></pre></div>
 <pre><code>##                Open     High      Low    Close
 ## 2007-01-06 50.24433 50.24433 50.11121 50.18112</code></pre>
@@ -509,13 +541,50 @@ df_xts &lt;-<span class="st"> </span><span class="kw">as.xts</span>(<span class=
 ## 2007-06-29 47.63629 47.77563 47.61733 47.66471
 ## 2007-06-30 47.67468 47.94127 47.67468 47.76719</code></pre>
 </div>
+<div id="-" class="slide section level2">
+<h1>Построение графиков</h1>
+<ul>
+<li>R имеет одну из лучших систем построения и визуализации данных.</li>
+<li>Существует несколько разных систем для построения графиков. В данном случае мы используем базовую (base) систему</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x =<span class="st"> </span><span class="dv">1</span>:<span class="dv">100</span>
+y =<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>)
+
+<span class="kw">plot</span>(<span class="dt">x =</span> x,<span class="dt">y =</span>y , <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>)</code></pre></div>
+<p><img src="lecture-1_files/figure-slidy/unnamed-chunk-28-1.png" width="768" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">hist</span>(<span class="kw">rnorm</span>(<span class="dv">100</span>))</code></pre></div>
+<p><img src="lecture-1_files/figure-slidy/unnamed-chunk-28-2.png" width="768" /></p>
+</div>
+<div id="---" class="slide section level2">
+<h1>Пример визуализации финансовых данных</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(quantmod)</code></pre></div>
+<pre><code>## Loading required package: quantmod</code></pre>
+<pre><code>## Loading required package: TTR</code></pre>
+<pre><code>## Version 0.4-0 included new data defaults. See ?getSymbols.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">AAPL =<span class="st"> </span><span class="kw">getSymbols</span>(<span class="st">&quot;AAPL&quot;</span>, <span class="dt">src =</span> <span class="st">&#39;google&#39;</span>, <span class="dt">auto.assign =</span> <span class="ot">FALSE</span>)</code></pre></div>
+<pre><code>##     As of 0.4-0, &#39;getSymbols&#39; uses env=parent.frame() and
+##  auto.assign=TRUE by default.
+## 
+##  This  behavior  will be  phased out in 0.5-0  when the call  will
+##  default to use auto.assign=FALSE. getOption(&quot;getSymbols.env&quot;) and 
+##  getOptions(&quot;getSymbols.auto.assign&quot;) are now checked for alternate defaults
+## 
+##  This message is shown once per session and may be disabled by setting 
+##  options(&quot;getSymbols.warning4.0&quot;=FALSE). See ?getSymbols for more details.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">chartSeries</span>(AAPL, <span class="dt">theme =</span> <span class="st">&#39;white&#39;</span>) </code></pre></div>
+<p><img src="lecture-1_files/figure-slidy/unnamed-chunk-29-1.png" width="768" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">chartSeries</span>(AAPL[<span class="st">&#39;2017::&#39;</span>], <span class="dt">theme =</span> <span class="st">&#39;white&#39;</span>)</code></pre></div>
+<p><img src="lecture-1_files/figure-slidy/unnamed-chunk-29-2.png" width="768" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(<span class="kw">diff</span>(<span class="kw">log</span>(<span class="kw">Cl</span>(AAPL))), <span class="dt">type =</span> <span class="st">&#39;l&#39;</span>, <span class="dt">main =</span> <span class="st">&#39;Лог-доходность акций AAPL, 2007-2017 &#39;</span>)</code></pre></div>
+<p><img src="lecture-1_files/figure-slidy/unnamed-chunk-29-3.png" width="768" /></p>
+</div>
 
   <!-- dynamically load mathjax for compatibility with self-contained -->
   <script>
     (function () {
       var script = document.createElement("script");
       script.type = "text/javascript";
-      script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
       document.getElementsByTagName("head")[0].appendChild(script);
     })();
   </script>
