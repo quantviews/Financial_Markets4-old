@@ -7,7 +7,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Салихов Марсель (marcel.salikhov@gmail.com)" />
-  <meta name="date" content="2016-12-05" />
+  <meta name="date" content="2017-09-23" />
   <meta name="copyright" content="НИУ ВШЭ. Салихов Марсель (marcel.salikhov@gmail.com)"/>
   <title>Линейные модели финансовых серий (AR)   Количественные финансы</title>
   <style type="text/css">code{white-space: pre;}</style>
@@ -48,12 +48,10 @@ code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Ann
 code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
 code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
   </style>
-  <link rel="stylesheet" type="text/css" media="screen, projection, print"
-    href="libs/Slidy2/styles/slidy.css" />
+  <link href="libs/slidy-2/styles/slidy.css" rel="stylesheet" />
+  <script src="libs/slidy-2/scripts/slidy.js"></script>
   <link rel="stylesheet" type="text/css" media="screen, projection, print"
    href="styles.css" />
-  <script src="libs/Slidy2/scripts/slidy.js"
-    charset="utf-8" type="text/javascript"></script>
 </head>
 <body>
 <div class="slide titlepage">
@@ -61,7 +59,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
   <p class="author">
 Салихов Марсель (<a href="mailto:marcel.salikhov@gmail.com">marcel.salikhov@gmail.com</a>)
   </p>
-  <p class="date">2016-12-05</p>
+  <p class="date">2017-09-23</p>
 </div>
 <div id="-" class="slide section level2">
 <h1>Цели лекции</h1>
@@ -78,7 +76,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h1>Автокорреляция</h1>
 <ul>
 <li>Когда мы работаем с финансовыми данными, обычно мы хотим научиться либо прогнозировать либо, либо симулировать их (к примеру, для риск-менеджмента). Для того, чтобы строить прогнозы или симуляции, необходимо иметь <strong>модель</strong> серии.</li>
+<li>Модель – это упрощенное представление о реальности. Мы хотим, чтобы модели наши модели инкорпорировали особенности серий, которые наблюдаются эмпирически.<br />
+</li>
 <li>Часто в финансовых сериях последовательные точки наблюдений влияют друг на друга в определенной степени – имеют корреляцию. С точки зрения количественного анализа задача состоит в том, чтобы идентифицировать и структурировать эти корреляции.</li>
+<li>Содержательно эту зависимость можно представить как распространение информации. Инвесторам требует какое-то времени, чтобы оценить и интерперировать поступающую информацию. По этим причинам доходности в момент времени <span class="math inline">\(t\)</span> могут быть связаны с доходностью в момент времени <span class="math inline">\(t-1\)</span>. Таким образом, в серии сохраняется определенная “память”.</li>
 <li>Адекватное моделирование этой корреляции может существенно улучшить возможности прогнозирования и для более сложных моделей.</li>
 <li>Если последовательные наблюдения во временном ряде скоррелированы между собой, то мы говорим, что в ряде есть <strong>серийная корреляция</strong> (или <strong>автокорреляция</strong>)</li>
 </ul>
@@ -87,16 +88,16 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h1>Автокорреляция - определение</h1>
 <p>Автокорреляция с лагом <span class="math inline">\(k\)</span> или <span class="math inline">\(\rho_k\)</span> определяется <strong>автоковариацией</strong>, нормализованной на дисперсию ряда:</p>
 <p><span class="math display">\[\rho_k = \frac{C_k}{\sigma^2} \]</span> <strong>Автоковариация</strong> временного ряда с лагом <span class="math inline">\(k\)</span> определяется как</p>
-<p><span class="math display">\[C_k = E[(x_t - \mu)(x_{t+k}-\mu)] \]</span> где <span class="math inline">\(\mu\)</span> - это ожидаемое значение (среднее) временного ряда. Ковариация определяет степень линейной зависимости между переменными, то есть ковариация говорит нам на сколько переменные изменяются вместе.</p>
-<p>На практике однако мы не знаем истинных значений этих параметров (среднего, дисперсии, коварации) и вынуждены оценивать <strong>выборочные</strong> значения по имеющейся у нас выборке.</p>
+<p><span class="math display">\[C_k = E[(x_t - \mu)(x_{t+k}-\mu)] \]</span> где <span class="math inline">\(\mu\)</span> – это ожидаемое значение (среднее) временного ряда. Ковариация определяет степень <strong>линейной зависимости</strong> между переменными, то есть ковариация говорит нам на сколько переменные изменяются вместе. Корреляция может не учесть нелинейную зависимость, которая есть в серии.</p>
+<p>На практике мы не знаем истинных значений этих параметров (среднего, дисперсии, коварации) и вынуждены оценивать <strong>выборочные</strong> значения - по имеющейся у нас выборке.</p>
 </div>
 <div class="slide section level2">
 <h1>Коррелограмма</h1>
 <ul>
-<li><strong>Коррелограмма</strong> – это график, на котором отражены значения выборочной автокорреляции с последовательными лагами. Этот график позволяет увидеть структуру корреляции на каждом лаге.</li>
-<li>Основное использование коррелограммы – визуально находить автокорреляцию. Потом мы будем“убирать” ее с помощью оцененной (fitted) модели.</li>
+<li><strong>Коррелограмма</strong> – это график, на котором отражены значения выборочной автокорреляции с последовательными лагами. Этот график позволяет увидеть структуру автокорреляции на каждом лаге.</li>
+<li>Основное использование коррелограммы – визуально находить автокорреляцию. Потом мы будем “убирать” ее с помощью оцененной (fitted) модели.</li>
 <li>Коррелограмма остатков модели позволяется оценивать “остаточную” автокорреляцию и понять, необходимы ли дальнейшие доработки модели.</li>
-<li>В R коррелограмма строится с помощью функции <code>acf</code>. В большинстве статистических программ также реализован этот функционал.</li>
+<li>В R коррелограмма строится с помощью функции <code>acf</code> (или <code>forecast::Acf</code>). В большинстве статистических программ также реализован этот функционал.</li>
 </ul>
 </div>
 <div id="-----" class="slide section level2">
@@ -139,7 +140,7 @@ w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1
 <div id="-" class="slide section level2">
 <h1>Белый шум</h1>
 <ul>
-<li>Базовый подход к построению модели временного ряда – это получение в результате оценки <strong>остатков</strong>, в которых отсутствует автокорреляция.</li>
+<li>Базовый подход к построению модели временного ряда – это получение в результате оценки модели <strong>остатков</strong>, в которых отсутствует автокорреляция.</li>
 <li>Если <span class="math inline">\(y_t\)</span> – наблюдаемое значение в момент времени <span class="math inline">\(t\)</span>, а <span class="math inline">\(\hat{y_t}\)</span> – предсказанное моделью значение, то остаток (residual)</li>
 </ul>
 <p><span class="math display">\[x_t = y_t - \hat{y_t}  \]</span> Рассмотрим временной ряд вида <span class="math inline">\({w_t: t=1,\ldots,n}\)</span>. Если элементы ряда <span class="math inline">\(w_t\)</span> являются независимыми одинаково распределенными (i.i.d.) величинами со средним (mean) равным 0 и дисперсией (variation), равной <span class="math inline">\(\sigma^2\)</span>, и отсутствием автокорреляции (<span class="math inline">\(Cor(w_i, w_j) \neq 0, \forall i \neq j\)</span>), тогда серия <span class="math inline">\(w_t\)</span> представляет собой <strong>белый шум</strong> (<strong>white noise</strong>).</p>
@@ -233,12 +234,28 @@ ar1_est$order</code></pre></div>
 <div id="-ar1-c--" class="slide section level2">
 <h1>Симуляция AR(1) c отрицательным параметром</h1>
 <p>попробуем параметр <span class="math inline">\(b_1\)</span> = -0.6</p>
-<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+ar1 &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>) <span class="co"># создадим белый шум</span>
+for (t in <span class="dv">2</span>:<span class="dv">100</span>) ar1[t] &lt;-<span class="st"> </span>-<span class="fl">0.6</span>*ar1[t<span class="dv">-1</span>] +<span class="st"> </span>w[t]
+<span class="kw">plot</span>(ar1, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">acf</span>(ar1)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-2.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">pacf</span>(ar1)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-10-3.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
 <div id="r2" class="slide section level2">
 <h1>АR(2)</h1>
 <p>Рассмотрим теперь AR(2) модель, в которой используется два лага для моделирования текущего значения:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">123</span>)
+ar2 &lt;-<span class="st"> </span>w &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">100</span>)
+for (t in <span class="dv">3</span>:<span class="dv">100</span>) ar2[t] &lt;-<span class="st"> </span><span class="fl">0.666</span>*ar2[t<span class="dv">-1</span>] -<span class="st"> </span><span class="fl">0.333</span>*ar2[t<span class="dv">-2</span>] +<span class="st"> </span>w[t]
+<span class="kw">layout</span>(<span class="dv">1</span>:<span class="dv">2</span>)
+<span class="kw">plot</span>(ar2, <span class="dt">type=</span><span class="st">&quot;l&quot;</span>)
+<span class="kw">acf</span>(ar2)</code></pre></div>
 <p><img src="lecture-4_files/figure-slidy/unnamed-chunk-11-1.png" width="1152" style="display: block; margin: auto;" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">pacf</span>(ar2)</code></pre></div>
+<p><img src="lecture-4_files/figure-slidy/unnamed-chunk-11-2.png" width="1152" style="display: block; margin: auto;" /></p>
 <p>попробуем оценить параметры c помощью функции <code>ar</code></p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ar2_est &lt;-<span class="st"> </span><span class="kw">ar</span>(ar2, <span class="dt">method =</span> <span class="st">&quot;mle&quot;</span>)
 ar2_est$ar</code></pre></div>
@@ -252,8 +269,8 @@ ar2_est$ar</code></pre></div>
 <h1>PАСF для AR(1) и AR(2)</h1>
 <p><img src="lecture-4_files/figure-slidy/unnamed-chunk-14-1.png" width="1152" style="display: block; margin: auto;" /></p>
 </div>
-<div id="-ar-----" class="slide section level2">
-<h1>Использование AR-модели для цен на нефть</h1>
+<div id="----ar-----" class="slide section level2">
+<h1>Оценка - использование AR-модели для цен на нефть</h1>
 <p>Пример – цены на нефть</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(quantmod)
 <span class="kw">getSymbols</span>(<span class="st">&quot;DCOILWTICO&quot;</span>, <span class="dt">src =</span> <span class="st">&quot;FRED&quot;</span>)</code></pre></div>
@@ -291,6 +308,23 @@ wti_ar$order</code></pre></div>
 <p>Судя по АСF остатков, AR(2) не очень хорошо подходит для моделирования динамики цен на нефть!</p>
 </div>
 <div id="-" class="slide section level2">
+<h1>Остатки модели</h1>
+<ul>
+<li>Остатки модели - остатки между расчетными величинами и фактическими значениями.</li>
+<li>Исследование остатков – важный шаг для оценки качества моделей.</li>
+<li>Хорошая модель “оставляет” после себя остатки, которые не имеют структуры.</li>
+</ul>
+</div>
+<div class="slide section level2">
+<h1>Выводы</h1>
+<ol style="list-style-type: decimal">
+<li>Большинство финансовых серий имеют автокорреляцию.</li>
+<li>Учет автокорреляции важен для построения моделей и оценки статистических эффектов.</li>
+<li>Для оценки порядка модели AR можно использовать график PACF.</li>
+<li>Мы предпочитаем использовать более простые модели, которые имеют меньше параметров для того, чтобы избежать “подгонки” под данные (overfitting).</li>
+</ol>
+</div>
+<div id="-" class="slide section level2">
 <h1>Использованные источники:</h1>
 <ol style="list-style-type: decimal">
 <li>“An Introduction to Analysis of Financial Data with R” (Ruey S. Tsay)</li>
@@ -306,7 +340,7 @@ wti_ar$order</code></pre></div>
     (function () {
       var script = document.createElement("script");
       script.type = "text/javascript";
-      script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
       document.getElementsByTagName("head")[0].appendChild(script);
     })();
   </script>
